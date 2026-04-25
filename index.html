@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>カウンセリングノート</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4F7BB5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="カウンセリング">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --primary: #4F7BB5;
+      --primary-light: #EBF2FF;
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --text: #1A2332;
+      --text-secondary: #6B7A8D;
+      --border: #E2E8F0;
+      --danger: #E53E3E;
+      --danger-light: #FFF5F5;
+      --danger-border: #FED7D7;
+      --nav-h: 60px;
+      --header-h: 52px;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      padding: 0 16px;
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ===== SCREENS ===== */
+    .screen {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      height: var(--nav-h);
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-family: inherit;
+      padding-bottom: 4px;
+      transition: color 0.15s;
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    /* ===== SEARCH SCREEN ===== */
+    .search-bar {
+      padding: 16px 16px 12px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .num-input {
+      flex: 1;
+      height: 46px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px;
+      font-size: 17px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      letter-spacing: 0.08em;
+      transition: border-color 0.2s;
+    }
+
+    .num-input:focus {
+      border-color: var(--primary);
+    }
+
+    .search-go {
+      height: 46px;
+      padding: 0 18px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .result-area {
+      padding: 0 16px 20px;
+      flex: 1;
+    }
+
+    .result-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .result-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .result-count {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card:active {
+      transform: scale(0.98);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-date {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .card-preview {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.55;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 20px;
+      color: var(--text-secondary);
+      gap: 10px;
+    }
+
+    .empty-icon {
+      font-size: 44px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+    }
+
+    /* ===== NEW SCREEN ===== */
+    .form-wrap {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      height: 46px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px;
+      font-size: 16px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field-input:focus {
+      border-color: var(--primary);
+    }
+
+    .field-textarea {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      resize: none;
+      line-height: 1.65;
+      min-height: 180px;
+      flex: 1;
+      transition: border-color 0.2s;
+    }
+
+    .field-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .save-btn {
+      height: 50px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: auto;
+    }
+
+    /* ===== LIST SCREEN ===== */
+    .filter-bar {
+      padding: 14px 16px 8px;
+    }
+
+    .filter-input {
+      width: 100%;
+      height: 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px 0 38px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8' stroke='%236B7A8D' stroke-width='2'/%3E%3Cpath d='m21 21-4.35-4.35' stroke='%236B7A8D' stroke-width='2'/%3E%3C/svg%3E") no-repeat 12px center;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .filter-input:focus {
+      border-color: var(--primary);
+    }
+
+    .list-header {
+      padding: 4px 16px 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .list-body {
+      padding: 0 16px 20px;
+    }
+
+    /* ===== DETAIL (slide panel) ===== */
+    .detail-panel {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      z-index: 80;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
+    }
+
+    .detail-panel.open {
+      transform: translateX(0);
+    }
+
+    .detail-header {
+      height: var(--header-h);
+      padding-top: env(safe-area-inset-top);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding-left: 4px;
+      padding-right: 16px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .back-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .detail-panel-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .detail-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .meta-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+    }
+
+    .meta-row + .meta-row {
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-key {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .meta-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .content-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .act-btn {
+      flex: 1;
+      height: 46px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .act-btn.edit {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .act-btn.del {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    /* ===== EDIT SHEET ===== */
+    .sheet-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 120;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .sheet-bg.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      height: 78vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transform: translateY(100%);
+      transition: transform 0.28s ease;
+    }
+
+    .sheet-bg.open .sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sheet-cancel {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sheet-save {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sheet-textarea {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      resize: none;
+      line-height: 1.65;
+      transition: border-color 0.2s;
+    }
+
+    .sheet-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(26, 35, 50, 0.92);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 22px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== UPDATE BANNER ===== */
+    .update-banner {
+      display: none;
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      padding: 10px 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .update-banner.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Update Banner -->
+<div class="update-banner" id="updateBanner" onclick="applyUpdate()">
+  🔄 新しいバージョンがあります。タップして更新
+</div>
+
+<!-- Header -->
+<header class="header">
+  <span class="header-title">カウンセリングノート</span>
+</header>
+
+<!-- ===== SCREEN: Search ===== -->
+<main class="screen active" id="screenSearch">
+  <div class="search-bar">
+    <input
+      class="num-input"
+      id="searchInput"
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      placeholder="患者番号"
+      autocomplete="off"
+    >
+    <button class="search-go" onclick="doSearch()">検索</button>
+  </div>
+  <div class="result-area" id="searchResults">
+    <div class="empty">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">患者番号を入力して検索</div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== SCREEN: New ===== -->
+<main class="screen" id="screenNew">
+  <div class="form-wrap">
+    <div class="field">
+      <label class="field-label">患者番号</label>
+      <input
+        class="field-input"
+        id="newNum"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="例: 001"
+        autocomplete="off"
+      >
+    </div>
+    <div class="field">
+      <label class="field-label">日付</label>
+      <input class="field-input" id="newDate" type="date">
+    </div>
+    <div class="field" style="flex:1;display:flex;flex-direction:column;">
+      <label class="field-label">カウンセリング内容</label>
+      <textarea
+        class="field-textarea"
+        id="newContent"
+        placeholder="プラウドピンの文字起こしをここに貼り付けてください..."
+        style="flex:1;"
+      ></textarea>
+    </div>
+    <button class="save-btn" onclick="saveRecord()">保存する</button>
+  </div>
+</main>
+
+<!-- ===== SCREEN: List ===== -->
+<main class="screen" id="screenList">
+  <div class="filter-bar">
+    <input
+      class="filter-input"
+      id="filterInput"
+      type="text"
+      inputmode="numeric"
+      placeholder="患者番号で絞り込み"
+      oninput="renderList()"
+    >
+  </div>
+  <div class="list-header" id="listHeader"></div>
+  <div class="list-body" id="listBody"></div>
+</main>
+
+<!-- ===== DETAIL PANEL ===== -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <button class="back-btn" onclick="closeDetail()">
+      <span class="back-icon">‹</span> 戻る
+    </button>
+    <span class="detail-panel-title" id="detailPanelTitle"></span>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<!-- ===== EDIT SHEET ===== -->
+<div class="sheet-bg" id="editSheet">
+  <div class="sheet">
+    <div class="sheet-top">
+      <button class="sheet-cancel" onclick="closeEdit()">キャンセル</button>
+      <span class="sheet-title">内容を編集</span>
+      <button class="sheet-save" onclick="saveEdit()">保存</button>
+    </div>
+    <textarea class="sheet-textarea" id="editTextarea"></textarea>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="navSearch" onclick="showScreen('Search')">
+    <span class="nav-icon">🔍</span>
+    <span>検索</span>
+  </button>
+  <button class="nav-btn" id="navNew" onclick="showScreen('New')">
+    <span class="nav-icon">＋</span>
+    <span>新規</span>
+  </button>
+  <button class="nav-btn" id="navList" onclick="showScreen('List')">
+    <span class="nav-icon">📋</span>
+    <span>一覧</span>
+  </button>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== DB =====
+  const DB = {
+    KEY: 'cn_records_v1',
+    all() {
+      try { return JSON.parse(localStorage.getItem(this.KEY)) || []; }
+      catch { return []; }
+    },
+    save(arr) { localStorage.setItem(this.KEY, JSON.stringify(arr)); },
+    add(rec) { const a = this.all(); a.push(rec); this.save(a); },
+    byPatient(num) {
+      return this.all()
+        .filter(r => r.p === num)
+        .sort((a, b) => b.d.localeCompare(a.d));
+    },
+    byId(id) { return this.all().find(r => r.id === id); },
+    del(id) { this.save(this.all().filter(r => r.id !== id)); },
+    update(id, patch) { this.save(this.all().map(r => r.id === id ? {...r, ...patch} : r)); }
+  };
+
+  // ===== State =====
+  let curScreen = 'Search';
+  let curDetailId = null;
+  let editId = null;
+  let pendingSW = null;
+
+  // ===== Helpers =====
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function fmtDate(d) {
+    const dt = new Date(d + 'T00:00:00');
+    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // ===== Navigation =====
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen' + name).classList.add('active');
+    document.getElementById('nav' + name).classList.add('active');
+    curScreen = name;
+    if (name === 'List') renderList();
+    if (name === 'New') initNew();
+  }
+
+  // ===== Card HTML =====
+  function cardHTML(r) {
+    const prev = esc(r.c.slice(0, 72).replace(/\n/g, ' '));
+    const more = r.c.length > 72 ? '...' : '';
+    return `<div class="card" onclick="openDetail('${r.id}')">
+      <div class="card-top">
+        <span class="card-date">${fmtDate(r.d)}</span>
+        <span class="badge">No.${esc(r.p)}</span>
+      </div>
+      <div class="card-preview">${prev}${more}</div>
+    </div>`;
+  }
+
+  // ===== Search =====
+  function doSearch() {
+    const num = document.getElementById('searchInput').value.trim();
+    if (!num) { toast('患者番号を入力してください'); return; }
+    const recs = DB.byPatient(num);
+    const el = document.getElementById('searchResults');
+    if (!recs.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="result-meta">
+      <span class="result-label">患者番号 ${esc(num)}</span>
+      <span class="result-count">${recs.length}件</span>
+    </div>${recs.map(cardHTML).join('')}`;
+  }
+
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // ===== New Record =====
+  function initNew() {
+    document.getElementById('newDate').value = today();
+  }
+
+  function saveRecord() {
+    const num = document.getElementById('newNum').value.trim();
+    const date = document.getElementById('newDate').value || today();
+    const content = document.getElementById('newContent').value.trim();
+    if (!num) { toast('患者番号を入力してください'); return; }
+    if (!content) { toast('内容を入力してください'); return; }
+    DB.add({ id: uid(), p: num, d: date, c: content, at: Date.now() });
+    document.getElementById('newNum').value = '';
+    document.getElementById('newContent').value = '';
+    toast('保存しました ✓');
+    setTimeout(() => showScreen('Search'), 500);
+  }
+
+  // ===== List =====
+  function renderList() {
+    const q = document.getElementById('filterInput').value.trim();
+    let recs = DB.all().sort((a, b) => b.d.localeCompare(a.d));
+    if (q) recs = recs.filter(r => r.p.includes(q));
+    document.getElementById('listHeader').textContent = recs.length + '件';
+    const el = document.getElementById('listBody');
+    if (!recs.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">記録がありません</div></div>`;
+      return;
+    }
+    el.innerHTML = recs.map(cardHTML).join('');
+  }
+
+  // ===== Detail =====
+  function openDetail(id) {
+    const r = DB.byId(id);
+    if (!r) return;
+    curDetailId = id;
+    document.getElementById('detailPanelTitle').textContent = `No.${r.p}`;
+    document.getElementById('detailBody').innerHTML = `
+      <div class="meta-card">
+        <div class="meta-row">
+          <span class="meta-key">患者番号</span>
+          <span class="meta-val">No.${esc(r.p)}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">日付</span>
+          <span class="meta-val">${fmtDate(r.d)}</span>
+        </div>
+      </div>
+      <div class="content-box">${esc(r.c)}</div>
+      <div class="action-row">
+        <button class="act-btn edit" onclick="openEdit('${id}')">編集</button>
+        <button class="act-btn del" onclick="delRecord('${id}')">削除</button>
+      </div>
+    `;
+    document.getElementById('detailPanel').classList.add('open');
+  }
+
+  function closeDetail() {
+    document.getElementById('detailPanel').classList.remove('open');
+    curDetailId = null;
+    if (curScreen === 'Search') {
+      const num = document.getElementById('searchInput').value.trim();
+      if (num) doSearch();
+    }
+    if (curScreen === 'List') renderList();
+  }
+
+  function delRecord(id) {
+    if (!confirm('この記録を削除しますか？')) return;
+    DB.del(id);
+    closeDetail();
+    toast('削除しました');
+  }
+
+  // ===== Edit =====
+  function openEdit(id) {
+    const r = DB.byId(id);
+    if (!r) return;
+    editId = id;
+    document.getElementById('editTextarea').value = r.c;
+    document.getElementById('editSheet').classList.add('open');
+    setTimeout(() => document.getElementById('editTextarea').focus(), 300);
+  }
+
+  function closeEdit() {
+    document.getElementById('editSheet').classList.remove('open');
+    editId = null;
+  }
+
+  function saveEdit() {
+    const c = document.getElementById('editTextarea').value.trim();
+    if (!c) { toast('内容を入力してください'); return; }
+    DB.update(editId, { c });
+    closeEdit();
+    openDetail(editId);
+    toast('更新しました ✓');
+  }
+
+  // ===== Update =====
+  function applyUpdate() {
+    if (pendingSW) {
+      pendingSW.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
+  }
+
+  // ===== Service Worker =====
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            pendingSW = nw;
+            document.getElementById('updateBanner').classList.add('show');
+          }
+        });
+      });
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+  }
+
+  // Init
+  initNew();
+</script>
+</body>
+</html>
