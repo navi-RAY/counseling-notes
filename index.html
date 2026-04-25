@@ -65,6 +65,18 @@
       color: var(--text);
     }
 
+    .reload-btn {
+      position: absolute;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 22px;
+      line-height: 1;
+      padding: 6px;
+      cursor: pointer;
+    }
+
     /* ===== SCREENS ===== */
     .screen {
       display: none;
@@ -615,6 +627,7 @@
 <!-- Header -->
 <header class="header">
   <span class="header-title">カウンセリングノート</span>
+  <button class="reload-btn" onclick="window.location.reload()" title="リロード">↺</button>
 </header>
 
 <!-- ===== SCREEN: Search ===== -->
