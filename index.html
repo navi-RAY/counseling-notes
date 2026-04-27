@@ -10,12 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="カウンセリング">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
     :root {
       --primary: #4F7BB5;
@@ -23,7 +18,7 @@
       --bg: #F0F4F8;
       --surface: #FFFFFF;
       --text: #1A2332;
-      --text-secondary: #6B7A8D;
+      --text-sub: #6B7A8D;
       --border: #E2E8F0;
       --danger: #E53E3E;
       --danger-light: #FFF5F5;
@@ -32,10 +27,7 @@
       --header-h: 52px;
     }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
+    html, body { height:100%; overflow:hidden; }
 
     body {
       font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
@@ -55,40 +47,39 @@
       justify-content: center;
       flex-shrink: 0;
       position: relative;
-      padding: 0 16px;
       padding-top: env(safe-area-inset-top);
     }
 
-    .header-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
+    .header-title { font-size:16px; font-weight:600; }
 
-    .reload-btn {
+    .header-icon-btn {
       position: absolute;
-      right: 16px;
       background: none;
       border: none;
-      color: var(--primary);
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1;
-      padding: 6px;
+      padding: 8px;
       cursor: pointer;
     }
 
-    /* ===== SCREENS ===== */
-    .screen {
-      display: none;
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      flex-direction: column;
-    }
+    .header-icon-btn.left { left: 10px; color: var(--text-sub); }
+    .header-icon-btn.right { right: 10px; color: var(--primary); font-size:22px; }
 
-    .screen.active {
-      display: flex;
+    /* ===== SYNC DOT ===== */
+    .sync-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      position: absolute;
+      right: 46px;
+      background: #ccc;
+      transition: background 0.3s;
     }
+    .sync-dot.syncing { background: #F6AD55; }
+    .sync-dot.synced  { background: #68D391; }
+
+    /* ===== SCREENS ===== */
+    .screen { display:none; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; flex-direction:column; }
+    .screen.active { display:flex; }
 
     /* ===== BOTTOM NAV ===== */
     .bottom-nav {
@@ -101,523 +92,239 @@
     }
 
     .nav-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-secondary);
-      font-size: 10px;
-      font-family: inherit;
-      padding-bottom: 4px;
-      transition: color 0.15s;
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:3px; background:none; border:none; cursor:pointer; color:var(--text-sub);
+      font-size:10px; font-family:inherit; padding-bottom:4px; transition:color 0.15s;
     }
+    .nav-btn.active { color: var(--primary); }
+    .nav-icon { font-size:20px; line-height:1; }
 
-    .nav-btn.active {
-      color: var(--primary);
-    }
-
-    .nav-icon {
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    /* ===== SEARCH SCREEN ===== */
-    .search-bar {
-      padding: 16px 16px 12px;
-      display: flex;
-      gap: 10px;
-    }
+    /* ===== SEARCH ===== */
+    .search-bar { padding:16px 16px 12px; display:flex; gap:10px; }
 
     .num-input {
-      flex: 1;
-      height: 46px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 0 14px;
-      font-size: 17px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      letter-spacing: 0.08em;
-      transition: border-color 0.2s;
+      flex:1; height:46px; border:1.5px solid var(--border); border-radius:12px;
+      padding:0 14px; font-size:17px; font-family:inherit; background:var(--surface);
+      color:var(--text); outline:none; letter-spacing:0.08em; transition:border-color 0.2s;
     }
-
-    .num-input:focus {
-      border-color: var(--primary);
-    }
+    .num-input:focus { border-color: var(--primary); }
 
     .search-go {
-      height: 46px;
-      padding: 0 18px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 14px;
-      font-family: inherit;
-      font-weight: 600;
-      cursor: pointer;
+      height:46px; padding:0 18px; background:var(--primary); color:#fff;
+      border:none; border-radius:12px; font-size:14px; font-family:inherit; font-weight:600; cursor:pointer;
     }
 
-    .result-area {
-      padding: 0 16px 20px;
-      flex: 1;
-    }
-
-    .result-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .result-label {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .result-count {
-      font-size: 13px;
-      color: var(--primary);
-      font-weight: 600;
-    }
+    .result-area { padding:0 16px 20px; flex:1; }
+    .result-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .result-label { font-size:13px; color:var(--text-sub); }
+    .result-count { font-size:13px; color:var(--primary); font-weight:600; }
 
     /* ===== CARDS ===== */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: transform 0.1s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      background:var(--surface); border:1px solid var(--border); border-radius:14px;
+      padding:14px 16px; margin-bottom:10px; cursor:pointer;
+      transition:transform 0.1s; box-shadow:0 1px 3px rgba(0,0,0,0.05);
     }
+    .card:active { transform:scale(0.98); }
+    .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .card-date { font-size:12px; color:var(--text-sub); }
+    .badge { background:var(--primary-light); color:var(--primary); font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
+    .card-preview { font-size:14px; color:var(--text); line-height:1.55; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 
-    .card:active {
-      transform: scale(0.98);
-    }
+    /* ===== EMPTY ===== */
+    .empty { display:flex; flex-direction:column; align-items:center; padding:56px 20px; color:var(--text-sub); gap:10px; }
+    .empty-icon { font-size:44px; }
+    .empty-text { font-size:14px; }
 
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .card-date {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .badge {
-      background: var(--primary-light);
-      color: var(--primary);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
-
-    .card-preview {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.55;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-
-    /* ===== EMPTY STATE ===== */
-    .empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 56px 20px;
-      color: var(--text-secondary);
-      gap: 10px;
-    }
-
-    .empty-icon {
-      font-size: 44px;
-    }
-
-    .empty-text {
-      font-size: 14px;
-    }
-
-    /* ===== NEW SCREEN ===== */
-    .form-wrap {
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .field-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
+    /* ===== NEW ===== */
+    .form-wrap { padding:20px 16px; display:flex; flex-direction:column; gap:16px; flex:1; }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field-label { font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:0.08em; text-transform:uppercase; }
 
     .field-input {
-      height: 46px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 0 14px;
-      font-size: 16px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
+      height:46px; border:1.5px solid var(--border); border-radius:12px;
+      padding:0 14px; font-size:16px; font-family:inherit; background:var(--surface);
+      color:var(--text); outline:none; transition:border-color 0.2s;
     }
-
-    .field-input:focus {
-      border-color: var(--primary);
-    }
+    .field-input:focus { border-color: var(--primary); }
 
     .field-textarea {
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      resize: none;
-      line-height: 1.65;
-      min-height: 180px;
-      flex: 1;
-      transition: border-color 0.2s;
+      border:1.5px solid var(--border); border-radius:12px; padding:12px 14px;
+      font-size:15px; font-family:inherit; background:var(--surface); color:var(--text);
+      outline:none; resize:none; line-height:1.65; min-height:180px; flex:1; transition:border-color 0.2s;
     }
-
-    .field-textarea:focus {
-      border-color: var(--primary);
-    }
+    .field-textarea:focus { border-color: var(--primary); }
 
     .save-btn {
-      height: 50px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-family: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: auto;
+      height:50px; background:var(--primary); color:#fff; border:none; border-radius:14px;
+      font-size:16px; font-family:inherit; font-weight:600; cursor:pointer; margin-top:auto;
     }
 
-    /* ===== LIST SCREEN ===== */
-    .filter-bar {
-      padding: 14px 16px 8px;
-    }
-
+    /* ===== LIST ===== */
+    .filter-bar { padding:14px 16px 8px; }
     .filter-input {
-      width: 100%;
-      height: 42px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 0 14px 0 38px;
-      font-size: 14px;
-      font-family: inherit;
+      width:100%; height:42px; border:1.5px solid var(--border); border-radius:12px;
+      padding:0 14px 0 38px; font-size:14px; font-family:inherit;
       background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8' stroke='%236B7A8D' stroke-width='2'/%3E%3Cpath d='m21 21-4.35-4.35' stroke='%236B7A8D' stroke-width='2'/%3E%3C/svg%3E") no-repeat 12px center;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
+      color:var(--text); outline:none; transition:border-color 0.2s;
     }
+    .filter-input:focus { border-color: var(--primary); }
+    .list-header { padding:4px 16px 8px; font-size:12px; color:var(--text-sub); }
+    .list-body { padding:0 16px 20px; }
 
-    .filter-input:focus {
-      border-color: var(--primary);
-    }
-
-    .list-header {
-      padding: 4px 16px 8px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .list-body {
-      padding: 0 16px 20px;
-    }
-
-    /* ===== DETAIL (slide panel) ===== */
+    /* ===== DETAIL PANEL ===== */
     .detail-panel {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      z-index: 80;
-      transform: translateX(100%);
-      transition: transform 0.28s ease;
+      position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column;
+      z-index:80; transform:translateX(100%); transition:transform 0.28s ease;
     }
-
-    .detail-panel.open {
-      transform: translateX(0);
-    }
+    .detail-panel.open { transform:translateX(0); }
 
     .detail-header {
-      height: var(--header-h);
-      padding-top: env(safe-area-inset-top);
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding-left: 4px;
-      padding-right: 16px;
-      flex-shrink: 0;
-      position: relative;
+      height:var(--header-h); padding-top:env(safe-area-inset-top);
+      background:var(--surface); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; padding-left:4px; padding-right:16px;
+      flex-shrink:0; position:relative;
     }
+    .back-btn { background:none; border:none; color:var(--primary); font-size:15px; display:flex; align-items:center; gap:2px; padding:8px 12px; cursor:pointer; }
+    .back-icon { font-size:20px; line-height:1; }
+    .detail-panel-title { position:absolute; left:50%; transform:translateX(-50%); font-size:16px; font-weight:600; }
+    .detail-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
 
-    .back-btn {
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    .back-icon {
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    .detail-panel-title {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .detail-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .meta-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-    }
-
-    .meta-row + .meta-row {
-      border-top: 1px solid var(--border);
-    }
-
-    .meta-key {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .meta-val {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-    }
+    .meta-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .meta-row { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; }
+    .meta-row+.meta-row { border-top:1px solid var(--border); }
+    .meta-key { font-size:13px; color:var(--text-sub); }
+    .meta-val { font-size:14px; font-weight:600; color:var(--text); }
 
     .content-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      font-size: 15px;
-      line-height: 1.75;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
-      flex: 1;
+      background:var(--surface); border:1px solid var(--border); border-radius:14px;
+      padding:16px; font-size:15px; line-height:1.75; color:var(--text);
+      white-space:pre-wrap; word-break:break-word; flex:1;
     }
 
-    .action-row {
-      display: flex;
-      gap: 10px;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .act-btn {
-      flex: 1;
-      height: 46px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      font-family: inherit;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .act-btn.edit {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .act-btn.del {
-      background: var(--danger-light);
-      color: var(--danger);
-      border: 1px solid var(--danger-border);
-    }
+    .action-row { display:flex; gap:10px; padding-bottom:env(safe-area-inset-bottom); }
+    .act-btn { flex:1; height:46px; border-radius:12px; border:none; font-size:14px; font-family:inherit; font-weight:600; cursor:pointer; }
+    .act-btn.edit { background:var(--bg); color:var(--text); border:1px solid var(--border); }
+    .act-btn.del { background:var(--danger-light); color:var(--danger); border:1px solid var(--danger-border); }
 
     /* ===== EDIT SHEET ===== */
     .sheet-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 120;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
+      position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:120;
+      opacity:0; pointer-events:none; transition:opacity 0.25s;
     }
-
-    .sheet-bg.open {
-      opacity: 1;
-      pointer-events: all;
-    }
+    .sheet-bg.open { opacity:1; pointer-events:all; }
 
     .sheet {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-radius: 20px 20px 0 0;
-      padding: 16px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      height: 78vh;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      transform: translateY(100%);
-      transition: transform 0.28s ease;
+      position:absolute; bottom:0; left:0; right:0; background:var(--surface);
+      border-radius:20px 20px 0 0; padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom));
+      height:78vh; display:flex; flex-direction:column; gap:14px;
+      transform:translateY(100%); transition:transform 0.28s ease;
     }
-
-    .sheet-bg.open .sheet {
-      transform: translateY(0);
-    }
-
-    .sheet-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .sheet-cancel {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    .sheet-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .sheet-save {
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
+    .sheet-bg.open .sheet { transform:translateY(0); }
+    .sheet-top { display:flex; justify-content:space-between; align-items:center; }
+    .sheet-cancel { background:none; border:none; color:var(--text-sub); font-size:15px; cursor:pointer; }
+    .sheet-title { font-size:16px; font-weight:600; }
+    .sheet-save { background:none; border:none; color:var(--primary); font-size:15px; font-weight:600; cursor:pointer; }
     .sheet-textarea {
-      flex: 1;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-family: inherit;
-      color: var(--text);
-      outline: none;
-      resize: none;
-      line-height: 1.65;
-      transition: border-color 0.2s;
+      flex:1; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px;
+      font-size:15px; font-family:inherit; color:var(--text); outline:none; resize:none; line-height:1.65;
     }
+    .sheet-textarea:focus { border-color: var(--primary); }
 
-    .sheet-textarea:focus {
-      border-color: var(--primary);
+    /* ===== SETTINGS SHEET ===== */
+    .settings-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 20px; border-bottom:1px solid var(--border); cursor:pointer;
     }
+    .settings-item:last-child { border-bottom:none; }
+    .settings-label { font-size:15px; color:var(--text); }
+    .settings-label.danger { color:var(--danger); }
+    .settings-arrow { color:var(--text-sub); font-size:16px; }
 
     /* ===== TOAST ===== */
     .toast {
-      position: fixed;
-      bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: rgba(26, 35, 50, 0.92);
-      color: #fff;
-      padding: 10px 22px;
-      border-radius: 22px;
-      font-size: 13px;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s, transform 0.25s;
-      z-index: 200;
+      position:fixed; bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
+      left:50%; transform:translateX(-50%) translateY(12px);
+      background:rgba(26,35,50,0.92); color:#fff; padding:10px 22px; border-radius:22px;
+      font-size:13px; font-weight:500; white-space:nowrap; opacity:0; pointer-events:none;
+      transition:opacity 0.25s, transform 0.25s; z-index:200;
     }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
     /* ===== UPDATE BANNER ===== */
     .update-banner {
-      display: none;
-      background: var(--primary);
-      color: #fff;
-      text-align: center;
-      font-size: 13px;
-      padding: 10px 16px;
-      cursor: pointer;
-      flex-shrink: 0;
+      display:none; background:var(--primary); color:#fff; text-align:center;
+      font-size:13px; padding:10px 16px; cursor:pointer; flex-shrink:0;
     }
+    .update-banner.show { display:block; }
 
-    .update-banner.show {
-      display: block;
+    /* ===== LOCK SCREEN ===== */
+    .lock-screen {
+      position:fixed; inset:0; background:#1C2E4A; z-index:999;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding-bottom:env(safe-area-inset-bottom);
     }
+    .lock-screen.hidden { display:none; }
+
+    .lock-app-name { font-size:22px; font-weight:700; color:#fff; margin-bottom:8px; }
+    .lock-subtitle { font-size:14px; color:rgba(255,255,255,0.6); margin-bottom:36px; min-height:20px; }
+
+    .pin-dots { display:flex; gap:18px; margin-bottom:48px; }
+    .pin-dot {
+      width:14px; height:14px; border-radius:50%;
+      border:2px solid rgba(255,255,255,0.5); transition:background 0.15s, border-color 0.15s;
+    }
+    .pin-dot.filled { background:#fff; border-color:#fff; }
+    .pin-dot.error  { background:#FC8181; border-color:#FC8181; }
+
+    .pin-pad { display:grid; grid-template-columns:repeat(3, 72px); grid-template-rows:repeat(4, 72px); gap:12px; }
+
+    .pin-key {
+      width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.12);
+      border:none; color:#fff; font-size:24px; font-family:inherit; font-weight:400;
+      cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.12s;
+    }
+    .pin-key:active { background:rgba(255,255,255,0.28); }
+    .pin-key.empty  { background:none; pointer-events:none; }
+    .pin-key.del    { font-size:20px; }
+
+    @keyframes shake {
+      0%,100% { transform:translateX(0); }
+      20% { transform:translateX(-10px); }
+      40% { transform:translateX(10px); }
+      60% { transform:translateX(-8px); }
+      80% { transform:translateX(8px); }
+    }
+    .shake { animation:shake 0.35s ease; }
   </style>
 </head>
 <body>
+
+<!-- ===== LOCK SCREEN ===== -->
+<div class="lock-screen hidden" id="lockScreen">
+  <div class="lock-app-name">カウンセリングノート</div>
+  <div class="lock-subtitle" id="lockSubtitle">PINを入力してください</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key del" onclick="pinKey('del')">⌫</button>
+  </div>
+</div>
 
 <!-- Update Banner -->
 <div class="update-banner" id="updateBanner" onclick="applyUpdate()">
@@ -626,29 +333,20 @@
 
 <!-- Header -->
 <header class="header">
+  <button class="header-icon-btn left" onclick="openSettings()">⚙️</button>
   <span class="header-title">カウンセリングノート</span>
-  <button class="reload-btn" onclick="window.location.reload()" title="リロード">↺</button>
+  <div class="sync-dot" id="syncDot"></div>
+  <button class="header-icon-btn right" onclick="window.location.reload()">↺</button>
 </header>
 
 <!-- ===== SCREEN: Search ===== -->
 <main class="screen active" id="screenSearch">
   <div class="search-bar">
-    <input
-      class="num-input"
-      id="searchInput"
-      type="text"
-      inputmode="numeric"
-      pattern="[0-9]*"
-      placeholder="患者番号"
-      autocomplete="off"
-    >
+    <input class="num-input" id="searchInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="患者番号" autocomplete="off">
     <button class="search-go" onclick="doSearch()">検索</button>
   </div>
   <div class="result-area" id="searchResults">
-    <div class="empty">
-      <div class="empty-icon">🔍</div>
-      <div class="empty-text">患者番号を入力して検索</div>
-    </div>
+    <div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">患者番号を入力して検索</div></div>
   </div>
 </main>
 
@@ -657,15 +355,7 @@
   <div class="form-wrap">
     <div class="field">
       <label class="field-label">患者番号</label>
-      <input
-        class="field-input"
-        id="newNum"
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="例: 001"
-        autocomplete="off"
-      >
+      <input class="field-input" id="newNum" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例: 001" autocomplete="off">
     </div>
     <div class="field">
       <label class="field-label">日付</label>
@@ -673,12 +363,7 @@
     </div>
     <div class="field" style="flex:1;display:flex;flex-direction:column;">
       <label class="field-label">カウンセリング内容</label>
-      <textarea
-        class="field-textarea"
-        id="newContent"
-        placeholder="プラウドピンの文字起こしをここに貼り付けてください..."
-        style="flex:1;"
-      ></textarea>
+      <textarea class="field-textarea" id="newContent" placeholder="プラウドピンの文字起こしをここに貼り付けてください..." style="flex:1;"></textarea>
     </div>
     <button class="save-btn" onclick="saveRecord()">保存する</button>
   </div>
@@ -687,14 +372,7 @@
 <!-- ===== SCREEN: List ===== -->
 <main class="screen" id="screenList">
   <div class="filter-bar">
-    <input
-      class="filter-input"
-      id="filterInput"
-      type="text"
-      inputmode="numeric"
-      placeholder="患者番号で絞り込み"
-      oninput="renderList()"
-    >
+    <input class="filter-input" id="filterInput" type="text" inputmode="numeric" placeholder="患者番号で絞り込み" oninput="renderList()">
   </div>
   <div class="list-header" id="listHeader"></div>
   <div class="list-body" id="listBody"></div>
@@ -703,9 +381,7 @@
 <!-- ===== DETAIL PANEL ===== -->
 <div class="detail-panel" id="detailPanel">
   <div class="detail-header">
-    <button class="back-btn" onclick="closeDetail()">
-      <span class="back-icon">‹</span> 戻る
-    </button>
+    <button class="back-btn" onclick="closeDetail()"><span class="back-icon">‹</span> 戻る</button>
     <span class="detail-panel-title" id="detailPanelTitle"></span>
   </div>
   <div class="detail-body" id="detailBody"></div>
@@ -723,68 +399,104 @@
   </div>
 </div>
 
+<!-- ===== SETTINGS SHEET ===== -->
+<div class="sheet-bg" id="settingsSheet">
+  <div class="sheet" style="height:auto;">
+    <div class="sheet-top" style="margin-bottom:4px;">
+      <button class="sheet-cancel" onclick="closeSettings()">閉じる</button>
+      <span class="sheet-title">設定</span>
+      <span style="width:52px;"></span>
+    </div>
+    <div id="settingsList"></div>
+  </div>
+</div>
+
 <!-- ===== BOTTOM NAV ===== -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="navSearch" onclick="showScreen('Search')">
-    <span class="nav-icon">🔍</span>
-    <span>検索</span>
+    <span class="nav-icon">🔍</span><span>検索</span>
   </button>
   <button class="nav-btn" id="navNew" onclick="showScreen('New')">
-    <span class="nav-icon">＋</span>
-    <span>新規</span>
+    <span class="nav-icon">＋</span><span>新規</span>
   </button>
   <button class="nav-btn" id="navList" onclick="showScreen('List')">
-    <span class="nav-icon">📋</span>
-    <span>一覧</span>
+    <span class="nav-icon">📋</span><span>一覧</span>
   </button>
 </nav>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 <script>
-  // ===== DB =====
-  const DB = {
-    KEY: 'cn_records_v1',
-    all() {
-      try { return JSON.parse(localStorage.getItem(this.KEY)) || []; }
-      catch { return []; }
-    },
-    save(arr) { localStorage.setItem(this.KEY, JSON.stringify(arr)); },
-    add(rec) { const a = this.all(); a.push(rec); this.save(a); },
-    byPatient(num) {
-      return this.all()
-        .filter(r => r.p === num)
-        .sort((a, b) => b.d.localeCompare(a.d));
-    },
-    byId(id) { return this.all().find(r => r.id === id); },
-    del(id) { this.save(this.all().filter(r => r.id !== id)); },
-    update(id, patch) { this.save(this.all().map(r => r.id === id ? {...r, ...patch} : r)); }
-  };
+  // ===== FIREBASE =====
+  firebase.initializeApp({
+    apiKey: "AIzaSyBAzYz_XSMGqAQcXMJuwYF9bclcyDj2tNY",
+    authDomain: "p-file-19631.firebaseapp.com",
+    projectId: "p-file-19631",
+    storageBucket: "p-file-19631.firebasestorage.app",
+    messagingSenderId: "369735715823",
+    appId: "1:369735715823:web:6cb1ae3ef93a47dea5441a",
+    measurementId: "G-X8GH32E7T9"
+  });
 
-  // ===== State =====
-  let curScreen = 'Search';
-  let curDetailId = null;
-  let editId = null;
-  let pendingSW = null;
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+  db.enablePersistence().catch(() => {});
+  const COL  = db.collection('records');
 
-  // ===== Helpers =====
-  function esc(s) {
-    return String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
+  // In-memory cache (updated by real-time listener)
+  let allRecords = [];
+  let unsubscribe = null;
+
+  // Sign in anonymously, then start listening
+  auth.signInAnonymously().then(() => {
+    setSyncDot('syncing');
+    unsubscribe = COL.orderBy('at', 'desc').onSnapshot(snap => {
+      allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setSyncDot('synced');
+      if (curScreen === 'List') renderList();
+      if (curScreen === 'Search') {
+        const num = document.getElementById('searchInput').value.trim();
+        if (num) doSearch();
+      }
+    }, () => setSyncDot(''));
+  }).catch(() => setSyncDot(''));
+
+  function setSyncDot(state) {
+    const el = document.getElementById('syncDot');
+    el.className = 'sync-dot' + (state ? ' ' + state : '');
+    if (state === 'synced') setTimeout(() => el.classList.remove('synced'), 2000);
   }
 
+  // ===== DB =====
+  const DB = {
+    all()          { return allRecords; },
+    byPatient(num) { return allRecords.filter(r => r.p === num).sort((a,b) => b.d.localeCompare(a.d)); },
+    byId(id)       { return allRecords.find(r => r.id === id); },
+    async add(rec)          { setSyncDot('syncing'); await COL.add(rec); },
+    async del(id)           { setSyncDot('syncing'); await COL.doc(id).delete(); },
+    async update(id, patch) { setSyncDot('syncing'); await COL.doc(id).update(patch); }
+  };
+
+  // ===== STATE =====
+  let curScreen    = 'Search';
+  let curDetailId  = null;
+  let editId       = null;
+  let pendingSW    = null;
+
+  // ===== HELPERS =====
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
   function fmtDate(d) {
     const dt = new Date(d + 'T00:00:00');
     return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
   }
-
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-
+  function today() { return new Date().toISOString().split('T')[0]; }
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -792,11 +504,7 @@
     setTimeout(() => el.classList.remove('show'), 2200);
   }
 
-  function today() {
-    return new Date().toISOString().split('T')[0];
-  }
-
-  // ===== Navigation =====
+  // ===== NAVIGATION =====
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -804,12 +512,12 @@
     document.getElementById('nav' + name).classList.add('active');
     curScreen = name;
     if (name === 'List') renderList();
-    if (name === 'New') initNew();
+    if (name === 'New')  initNew();
   }
 
-  // ===== Card HTML =====
+  // ===== CARD HTML =====
   function cardHTML(r) {
-    const prev = esc(r.c.slice(0, 72).replace(/\n/g, ' '));
+    const prev = esc(r.c.slice(0, 72).replace(/\n/g,' '));
     const more = r.c.length > 72 ? '...' : '';
     return `<div class="card" onclick="openDetail('${r.id}')">
       <div class="card-top">
@@ -820,12 +528,12 @@
     </div>`;
   }
 
-  // ===== Search =====
+  // ===== SEARCH =====
   function doSearch() {
     const num = document.getElementById('searchInput').value.trim();
     if (!num) { toast('患者番号を入力してください'); return; }
     const recs = DB.byPatient(num);
-    const el = document.getElementById('searchResults');
+    const el   = document.getElementById('searchResults');
     if (!recs.length) {
       el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
       return;
@@ -835,33 +543,30 @@
       <span class="result-count">${recs.length}件</span>
     </div>${recs.map(cardHTML).join('')}`;
   }
+  document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
 
-  document.getElementById('searchInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
-  });
+  // ===== NEW =====
+  function initNew() { document.getElementById('newDate').value = today(); }
 
-  // ===== New Record =====
-  function initNew() {
-    document.getElementById('newDate').value = today();
-  }
-
-  function saveRecord() {
-    const num = document.getElementById('newNum').value.trim();
-    const date = document.getElementById('newDate').value || today();
+  async function saveRecord() {
+    const num     = document.getElementById('newNum').value.trim();
+    const date    = document.getElementById('newDate').value || today();
     const content = document.getElementById('newContent').value.trim();
-    if (!num) { toast('患者番号を入力してください'); return; }
+    if (!num)     { toast('患者番号を入力してください'); return; }
     if (!content) { toast('内容を入力してください'); return; }
-    DB.add({ id: uid(), p: num, d: date, c: content, at: Date.now() });
-    document.getElementById('newNum').value = '';
-    document.getElementById('newContent').value = '';
-    toast('保存しました ✓');
-    setTimeout(() => showScreen('Search'), 500);
+    try {
+      await DB.add({ p: num, d: date, c: content, at: Date.now() });
+      document.getElementById('newNum').value     = '';
+      document.getElementById('newContent').value = '';
+      toast('保存しました ✓');
+      setTimeout(() => showScreen('Search'), 500);
+    } catch { toast('保存に失敗しました'); }
   }
 
-  // ===== List =====
+  // ===== LIST =====
   function renderList() {
-    const q = document.getElementById('filterInput').value.trim();
-    let recs = DB.all().sort((a, b) => b.d.localeCompare(a.d));
+    const q    = document.getElementById('filterInput').value.trim();
+    let recs   = DB.all().slice().sort((a,b) => b.d.localeCompare(a.d));
     if (q) recs = recs.filter(r => r.p.includes(q));
     document.getElementById('listHeader').textContent = recs.length + '件';
     const el = document.getElementById('listBody');
@@ -872,7 +577,7 @@
     el.innerHTML = recs.map(cardHTML).join('');
   }
 
-  // ===== Detail =====
+  // ===== DETAIL =====
   function openDetail(id) {
     const r = DB.byId(id);
     if (!r) return;
@@ -880,42 +585,31 @@
     document.getElementById('detailPanelTitle').textContent = `No.${r.p}`;
     document.getElementById('detailBody').innerHTML = `
       <div class="meta-card">
-        <div class="meta-row">
-          <span class="meta-key">患者番号</span>
-          <span class="meta-val">No.${esc(r.p)}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-key">日付</span>
-          <span class="meta-val">${fmtDate(r.d)}</span>
-        </div>
+        <div class="meta-row"><span class="meta-key">患者番号</span><span class="meta-val">No.${esc(r.p)}</span></div>
+        <div class="meta-row"><span class="meta-key">日付</span><span class="meta-val">${fmtDate(r.d)}</span></div>
       </div>
       <div class="content-box">${esc(r.c)}</div>
       <div class="action-row">
         <button class="act-btn edit" onclick="openEdit('${id}')">編集</button>
-        <button class="act-btn del" onclick="delRecord('${id}')">削除</button>
-      </div>
-    `;
+        <button class="act-btn del"  onclick="delRecord('${id}')">削除</button>
+      </div>`;
     document.getElementById('detailPanel').classList.add('open');
   }
 
   function closeDetail() {
     document.getElementById('detailPanel').classList.remove('open');
     curDetailId = null;
-    if (curScreen === 'Search') {
-      const num = document.getElementById('searchInput').value.trim();
-      if (num) doSearch();
-    }
+    if (curScreen === 'Search') { const n = document.getElementById('searchInput').value.trim(); if (n) doSearch(); }
     if (curScreen === 'List') renderList();
   }
 
-  function delRecord(id) {
+  async function delRecord(id) {
     if (!confirm('この記録を削除しますか？')) return;
-    DB.del(id);
-    closeDetail();
-    toast('削除しました');
+    try { await DB.del(id); closeDetail(); toast('削除しました'); }
+    catch { toast('削除に失敗しました'); }
   }
 
-  // ===== Edit =====
+  // ===== EDIT =====
   function openEdit(id) {
     const r = DB.byId(id);
     if (!r) return;
@@ -924,31 +618,127 @@
     document.getElementById('editSheet').classList.add('open');
     setTimeout(() => document.getElementById('editTextarea').focus(), 300);
   }
-
-  function closeEdit() {
-    document.getElementById('editSheet').classList.remove('open');
-    editId = null;
-  }
-
-  function saveEdit() {
+  function closeEdit() { document.getElementById('editSheet').classList.remove('open'); editId = null; }
+  async function saveEdit() {
     const c = document.getElementById('editTextarea').value.trim();
     if (!c) { toast('内容を入力してください'); return; }
-    DB.update(editId, { c });
-    closeEdit();
-    openDetail(editId);
-    toast('更新しました ✓');
+    try {
+      await DB.update(editId, { c });
+      closeEdit();
+      openDetail(editId);
+      toast('更新しました ✓');
+    } catch { toast('更新に失敗しました'); }
   }
 
-  // ===== Update =====
-  function applyUpdate() {
-    if (pendingSW) {
-      pendingSW.postMessage({ type: 'SKIP_WAITING' });
-    } else {
-      window.location.reload();
+  // ===== SETTINGS =====
+  function openSettings() {
+    const hasPin = !!getPin();
+    document.getElementById('settingsList').innerHTML = !hasPin
+      ? `<div class="settings-item" onclick="closeSettings();showLock('setup1')">
+           <span class="settings-label">PINを設定する</span><span class="settings-arrow">›</span>
+         </div>`
+      : `<div class="settings-item" onclick="closeSettings();showLock('setup1')">
+           <span class="settings-label">PINを変更する</span><span class="settings-arrow">›</span>
+         </div>
+         <div class="settings-item" onclick="confirmRemovePin()">
+           <span class="settings-label danger">PINを削除する</span><span class="settings-arrow">›</span>
+         </div>`;
+    document.getElementById('settingsSheet').classList.add('open');
+  }
+  function closeSettings() { document.getElementById('settingsSheet').classList.remove('open'); }
+  function confirmRemovePin() {
+    if (!confirm('PINを削除しますか？')) return;
+    removePin();
+    closeSettings();
+    toast('PINを削除しました');
+  }
+
+  // ===== PIN =====
+  let pinInput = '';
+  let pinMode  = 'unlock';
+  let pinTemp  = '';
+
+  function getPin()       { return localStorage.getItem('app_pin'); }
+  function setPin(p)      { localStorage.setItem('app_pin', p); }
+  function removePin()    { localStorage.removeItem('app_pin'); }
+
+  function showLock(mode) {
+    pinMode   = mode;
+    pinInput  = '';
+    pinTemp   = '';
+    updateDots();
+    const labels = { unlock:'PINを入力してください', setup1:'新しいPINを入力してください', setup2:'もう一度入力してください' };
+    document.getElementById('lockSubtitle').textContent = labels[mode];
+    document.getElementById('lockScreen').classList.remove('hidden');
+  }
+  function hideLock() { document.getElementById('lockScreen').classList.add('hidden'); }
+
+  function updateDots() {
+    for (let i = 0; i < 4; i++) {
+      const d = document.getElementById('dot' + i);
+      d.classList.toggle('filled', i < pinInput.length);
+      d.classList.remove('error');
     }
   }
 
-  // ===== Service Worker =====
+  function pinKey(val) {
+    if (val === 'del') { pinInput = pinInput.slice(0,-1); updateDots(); return; }
+    if (pinInput.length >= 4) return;
+    pinInput += val;
+    updateDots();
+    if (pinInput.length === 4) setTimeout(handlePin, 120);
+  }
+
+  function handlePin() {
+    if (pinMode === 'unlock') {
+      if (pinInput === getPin()) { hideLock(); }
+      else { shakePin(); }
+    } else if (pinMode === 'setup1') {
+      pinTemp  = pinInput;
+      pinInput = '';
+      updateDots();
+      pinMode = 'setup2';
+      document.getElementById('lockSubtitle').textContent = 'もう一度入力してください';
+    } else if (pinMode === 'setup2') {
+      if (pinInput === pinTemp) { setPin(pinInput); hideLock(); toast('PINを設定しました ✓'); }
+      else {
+        shakePin(() => {
+          pinMode = 'setup1';
+          document.getElementById('lockSubtitle').textContent = '新しいPINを入力してください';
+        });
+      }
+    }
+  }
+
+  function shakePin(cb) {
+    for (let i = 0; i < 4; i++) document.getElementById('dot'+i).classList.add('error');
+    const el = document.getElementById('pinDots');
+    el.classList.add('shake');
+    setTimeout(() => {
+      el.classList.remove('shake');
+      pinInput = '';
+      updateDots();
+      if (cb) cb();
+    }, 400);
+  }
+
+  // Auto-lock after 60 seconds in background
+  let hiddenAt = null;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); }
+    else {
+      if (hiddenAt && getPin() && Date.now() - hiddenAt > 60000) showLock('unlock');
+      hiddenAt = null;
+    }
+  });
+
+  // ===== UPDATE =====
+  function applyUpdate() {
+    if (pendingSW) pendingSW.postMessage({ type:'SKIP_WAITING' });
+    else window.location.reload();
+  }
+
+  // ===== SERVICE WORKER =====
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
       reg.addEventListener('updatefound', () => {
@@ -961,14 +751,12 @@
         });
       });
     });
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
   }
 
-  // Init
+  // ===== INIT =====
   initNew();
+  if (getPin()) showLock('unlock');
 </script>
 </body>
 </html>
