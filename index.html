@@ -127,7 +127,9 @@
     }
     .card:active { transform:scale(0.98); }
     .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .card-date { font-size:12px; color:var(--text-sub); }
+    .card-num  { font-size:13px; font-weight:700; color:var(--primary); min-width:24px; }
+    .card-date { font-size:12px; color:var(--text-sub); flex:1; }
+    .card-dr   { font-size:12px; color:var(--text-sub); margin-bottom:6px; }
     .badge { background:var(--primary-light); color:var(--primary); font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
     .card-preview { font-size:14px; color:var(--text); line-height:1.55; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 
@@ -361,6 +363,10 @@
       <label class="field-label">日付</label>
       <input class="field-input" id="newDate" type="date">
     </div>
+    <div class="field">
+      <label class="field-label">担当Dr</label>
+      <input class="field-input" id="newDr" type="text" placeholder="例: 山田" autocomplete="off">
+    </div>
     <div class="field" style="flex:1;display:flex;flex-direction:column;">
       <label class="field-label">カウンセリング内容</label>
       <textarea class="field-textarea" id="newContent" placeholder="プラウドピンの文字起こしをここに貼り付けてください..." style="flex:1;"></textarea>
@@ -395,6 +401,7 @@
       <span class="sheet-title">内容を編集</span>
       <button class="sheet-save" onclick="saveEdit()">保存</button>
     </div>
+    <input class="field-input" id="editDr" type="text" placeholder="担当Dr" autocomplete="off" style="flex-shrink:0;">
     <textarea class="sheet-textarea" id="editTextarea"></textarea>
   </div>
 </div>
@@ -530,14 +537,17 @@
   }
 
   // ===== CARD HTML =====
-  function cardHTML(r) {
-    const prev = esc(r.c.slice(0, 72).replace(/\n/g,' '));
-    const more = r.c.length > 72 ? '...' : '';
+  function cardHTML(r, num) {
+    const prev = esc(r.c.slice(0, 60).replace(/\n/g,' '));
+    const more = r.c.length > 60 ? '...' : '';
+    const dr   = r.dr ? `<span class="card-dr">Dr. ${esc(r.dr)}</span>` : '';
     return `<div class="card" onclick="openDetail('${r.id}')">
       <div class="card-top">
+        <span class="card-num">${num}</span>
         <span class="card-date">${fmtDate(r.d)}</span>
         <span class="badge">No.${esc(r.p)}</span>
       </div>
+      ${dr}
       <div class="card-preview">${prev}${more}</div>
     </div>`;
   }
@@ -552,10 +562,11 @@
       el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
       return;
     }
+    const sorted = recs.slice().sort((a,b) => a.d.localeCompare(b.d));
     el.innerHTML = `<div class="result-meta">
       <span class="result-label">患者番号 ${esc(num)}</span>
-      <span class="result-count">${recs.length}件</span>
-    </div>${recs.map(cardHTML).join('')}`;
+      <span class="result-count">${sorted.length}件</span>
+    </div>${sorted.map((r,i) => cardHTML(r, i+1)).join('')}`;
   }
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
 
@@ -568,9 +579,11 @@
     const content = document.getElementById('newContent').value.trim();
     if (!num)     { toast('患者番号を入力してください'); return; }
     if (!content) { toast('内容を入力してください'); return; }
+    const dr = document.getElementById('newDr').value.trim();
     try {
-      await DB.add({ p: num, d: date, c: content, at: Date.now() });
+      await DB.add({ p: num, d: date, c: content, dr, at: Date.now() });
       document.getElementById('newNum').value     = '';
+      document.getElementById('newDr').value      = '';
       document.getElementById('newContent').value = '';
       toast('保存しました ✓');
       setTimeout(() => showScreen('Search'), 500);
@@ -588,7 +601,7 @@
       el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">記録がありません</div></div>`;
       return;
     }
-    el.innerHTML = recs.map(cardHTML).join('');
+    el.innerHTML = recs.map((r,i) => cardHTML(r, i+1)).join('');
   }
 
   // ===== DETAIL =====
@@ -601,6 +614,7 @@
       <div class="meta-card">
         <div class="meta-row"><span class="meta-key">患者番号</span><span class="meta-val">No.${esc(r.p)}</span></div>
         <div class="meta-row"><span class="meta-key">日付</span><span class="meta-val">${fmtDate(r.d)}</span></div>
+        <div class="meta-row"><span class="meta-key">担当Dr</span><span class="meta-val">${r.dr ? 'Dr. '+esc(r.dr) : '—'}</span></div>
       </div>
       <div class="content-box">${esc(r.c)}</div>
       <div class="action-row">
@@ -628,16 +642,18 @@
     const r = DB.byId(id);
     if (!r) return;
     editId = id;
+    document.getElementById('editDr').value       = r.dr || '';
     document.getElementById('editTextarea').value = r.c;
     document.getElementById('editSheet').classList.add('open');
     setTimeout(() => document.getElementById('editTextarea').focus(), 300);
   }
   function closeEdit() { document.getElementById('editSheet').classList.remove('open'); editId = null; }
   async function saveEdit() {
-    const c = document.getElementById('editTextarea').value.trim();
+    const c  = document.getElementById('editTextarea').value.trim();
+    const dr = document.getElementById('editDr').value.trim();
     if (!c) { toast('内容を入力してください'); return; }
     try {
-      await DB.update(editId, { c });
+      await DB.update(editId, { c, dr });
       closeEdit();
       openDetail(editId);
       toast('更新しました ✓');
