@@ -1,4 +1,4 @@
-const CACHE = 'cn-v1';
+const CACHE = 'cn-v3';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 // Install: cache assets
