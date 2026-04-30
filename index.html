@@ -63,7 +63,9 @@
     }
 
     .header-icon-btn.left { left: 10px; color: var(--text-sub); }
-    .header-icon-btn.right { right: 10px; color: var(--primary); font-size:22px; }
+    .header-icon-btn.right { right: 10px; color: var(--primary); }
+    .header-icon-btn.right:active svg { animation: spin 0.4s linear; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* ===== SYNC DOT ===== */
     .sync-dot {
