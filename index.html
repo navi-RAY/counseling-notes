@@ -94,9 +94,12 @@
     .nav-btn {
       flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
       gap:3px; background:none; border:none; cursor:pointer; color:var(--text-sub);
-      font-size:10px; font-family:inherit; padding-bottom:4px; transition:color 0.15s;
+      font-size:10px; font-family:inherit; padding-bottom:4px; transition:color 0.15s, background 0.1s;
+      border-top: 2px solid transparent;
+      -webkit-tap-highlight-color: rgba(79,123,181,0.1);
     }
-    .nav-btn.active { color: var(--primary); }
+    .nav-btn.active { color: var(--primary); border-top-color: var(--primary); }
+    .nav-btn:active { background: rgba(79,123,181,0.08); }
     .nav-icon { font-size:20px; line-height:1; }
 
     /* ===== SEARCH ===== */
@@ -112,7 +115,9 @@
     .search-go {
       height:46px; padding:0 18px; background:var(--primary); color:#fff;
       border:none; border-radius:12px; font-size:14px; font-family:inherit; font-weight:600; cursor:pointer;
+      transition: opacity 0.1s;
     }
+    .search-go:active { opacity: 0.75; }
 
     .result-area { padding:0 16px 20px; flex:1; }
     .result-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
@@ -121,13 +126,17 @@
 
     /* ===== CARDS (Notion style) ===== */
     .card {
-      padding: 10px 16px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       background: var(--surface);
-      transition: background 0.12s;
+      transition: background 0.08s;
+      border-left: 3px solid transparent;
     }
-    .card:active { background: #f1f1ef; }
+    .card:active {
+      background: #f0f4ff;
+      border-left-color: var(--primary);
+    }
     .card-top { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
     .card-date { font-size:12px; color:var(--text-sub); }
     .card-dr   { font-size:12px; color:var(--text-sub); }
@@ -161,7 +170,9 @@
     .save-btn {
       height:50px; background:var(--primary); color:#fff; border:none; border-radius:14px;
       font-size:16px; font-family:inherit; font-weight:600; cursor:pointer; margin-top:auto;
+      transition: opacity 0.1s, transform 0.1s;
     }
+    .save-btn:active { opacity: 0.8; transform: scale(0.98); }
 
     /* ===== LIST ===== */
     .filter-bar { padding:14px 16px 8px; }
