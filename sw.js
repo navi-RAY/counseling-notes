@@ -1,14 +1,13 @@
-const CACHE = 'cn-v8';
+const CACHE = 'cn-v9';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
-// Install: cache assets
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(ASSETS))
   );
+  self.skipWaiting(); // 即座に新しいSWを適用
 });
 
-// Activate: clear old caches, take control immediately
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -19,10 +18,9 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: network-first for HTML (always get latest on reload), cache-first for others
+// HTML: 常にネットワークから取得（リロード = 最新版）
 self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
-    // HTML: try network first so updates are picked up on reload
     e.respondWith(
       fetch(e.request)
         .then(res => {
@@ -33,14 +31,8 @@ self.addEventListener('fetch', e => {
         .catch(() => caches.match(e.request))
     );
   } else {
-    // Assets: cache first
     e.respondWith(
       caches.match(e.request).then(r => r || fetch(e.request))
     );
   }
-});
-
-// Message from app: skip waiting to activate new SW
-self.addEventListener('message', e => {
-  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
