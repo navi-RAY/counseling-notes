@@ -64,8 +64,8 @@
 
     .header-icon-btn.left { left: 10px; color: var(--text-sub); }
     .header-icon-btn.right { right: 10px; color: var(--primary); }
-    .header-icon-btn.right:active svg { animation: spin 0.4s linear; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spinning { animation: spin 0.5s linear; }
 
     /* ===== SYNC DOT ===== */
     .sync-dot {
@@ -356,8 +356,8 @@
   </button>
   <span class="header-title">カウンセリングノート</span>
   <div class="sync-dot" id="syncDot"></div>
-  <button class="header-icon-btn right" onclick="window.location.reload()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+  <button class="header-icon-btn right" onclick="doReload(this)">
+    <svg id="reloadIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
     </svg>
   </button>
@@ -811,6 +811,12 @@
       });
     });
     navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  }
+
+  function doReload(btn) {
+    const icon = document.getElementById('reloadIcon');
+    icon.classList.add('spinning');
+    setTimeout(() => window.location.reload(), 500);
   }
 
   // ===== INIT =====
