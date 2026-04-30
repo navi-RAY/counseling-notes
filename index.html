@@ -454,6 +454,7 @@
 
   // Sign in anonymously, then start listening
   auth.signInAnonymously().then(() => {
+    migrateLocalStorage();
     setSyncDot('syncing');
     unsubscribe = COL.orderBy('at', 'desc').onSnapshot(snap => {
       allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -465,6 +466,19 @@
       }
     }, () => setSyncDot(''));
   }).catch(() => setSyncDot(''));
+
+  async function migrateLocalStorage() {
+    if (localStorage.getItem('cn_migrated')) return;
+    try {
+      const old = JSON.parse(localStorage.getItem('cn_records_v1') || '[]');
+      if (!old.length) { localStorage.setItem('cn_migrated', '1'); return; }
+      for (const r of old) {
+        await COL.add({ p: r.p, d: r.d, c: r.c, at: r.at || Date.now() });
+      }
+      localStorage.setItem('cn_migrated', '1');
+      toast('過去のデータを移行しました ✓');
+    } catch { /* 移行失敗は無視 */ }
+  }
 
   function setSyncDot(state) {
     const el = document.getElementById('syncDot');
