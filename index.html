@@ -593,7 +593,7 @@
   // ===== LIST =====
   function renderList() {
     const q    = document.getElementById('filterInput').value.trim();
-    let recs   = DB.all().slice().sort((a,b) => b.d.localeCompare(a.d));
+    let recs   = DB.all().slice().sort((a,b) => a.p.localeCompare(b.p, undefined, {numeric:true}) || a.d.localeCompare(b.d));
     if (q) recs = recs.filter(r => r.p.includes(q));
     document.getElementById('listHeader').textContent = recs.length + '件';
     const el = document.getElementById('listBody');
