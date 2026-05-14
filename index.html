@@ -455,6 +455,12 @@
   </div>
 </div>
 
+<!-- ===== SCREEN: Dr別 ===== -->
+<main class="screen" id="screenDr">
+  <div class="list-header" id="drHeader"></div>
+  <div class="list-body" id="drBody"></div>
+</main>
+
 <!-- ===== BOTTOM NAV ===== -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="navSearch" onclick="showScreen('Search')">
@@ -474,6 +480,12 @@
       <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>
     </svg>
     <span>一覧</span>
+  </button>
+  <button class="nav-btn" id="navDr" onclick="showScreen('Dr')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span>Dr別</span>
   </button>
 </nav>
 
@@ -580,6 +592,7 @@
     curScreen = name;
     if (name === 'List') renderList();
     if (name === 'New')  initNew();
+    if (name === 'Dr')   renderDr();
   }
 
   // ===== CARD HTML =====
@@ -702,6 +715,45 @@
       openDetail(editId);
       toast('更新しました ✓');
     } catch { toast('更新に失敗しました'); }
+  }
+
+  // ===== DR別 =====
+  function renderDr() {
+    const recs = DB.all();
+    const drMap = {};
+    recs.forEach(r => {
+      const dr = r.dr || '未設定';
+      if (!drMap[dr]) drMap[dr] = [];
+      drMap[dr].push(r);
+    });
+
+    const drs = Object.keys(drMap).sort();
+    document.getElementById('drHeader').textContent = drs.length + '名';
+
+    if (!drs.length) {
+      document.getElementById('drBody').innerHTML = `<div class="empty"><div class="empty-icon">👨‍⚕️</div><div class="empty-text">記録がありません</div></div>`;
+      return;
+    }
+
+    document.getElementById('drBody').innerHTML = drs.map(dr => {
+      const count = drMap[dr].length;
+      const latest = drMap[dr].sort((a,b) => b.d.localeCompare(a.d))[0];
+      return `<div class="card" onclick="filterByDr('${esc(dr)}')">
+        <div class="card-top">
+          <span class="card-patient">${dr === '未設定' ? '— 未設定' : 'Dr. ' + esc(dr)}</span>
+          <span class="card-date">${count}件</span>
+        </div>
+        <div class="card-preview">最新: ${fmtDate(latest.d)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function filterByDr(dr) {
+    showScreen('List');
+    document.getElementById('filterInput').value = '';
+    const recs = DB.all().filter(r => (r.dr || '未設定') === dr).sort((a,b) => b.d.localeCompare(a.d));
+    document.getElementById('listHeader').textContent = `Dr. ${dr}　${recs.length}件`;
+    document.getElementById('listBody').innerHTML = recs.map(r => cardHTML(r)).join('');
   }
 
   // ===== SETTINGS =====
