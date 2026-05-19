@@ -385,7 +385,7 @@
     <button class="search-go" onclick="doSearch()">検索</button>
   </div>
   <div class="result-area" id="searchResults">
-    <div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">患者番号を入力して検索</div></div>
+    <div class="empty"><div class="empty-text">患者番号を入力して検索</div></div>
   </div>
 </main>
 
@@ -616,7 +616,7 @@
     const recs = DB.byPatient(num);
     const el   = document.getElementById('searchResults');
     if (!recs.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
+      el.innerHTML = `<div class="empty"><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
       return;
     }
     const sorted = recs.slice().sort((a,b) => a.d.localeCompare(b.d));
@@ -655,7 +655,7 @@
     document.getElementById('listHeader').textContent = recs.length + '件';
     const el = document.getElementById('listBody');
     if (!recs.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">記録がありません</div></div>`;
+      el.innerHTML = `<div class="empty"><div class="empty-text">記録がありません</div></div>`;
       return;
     }
     el.innerHTML = recs.map(r => cardHTML(r)).join('');
@@ -731,7 +731,7 @@
     document.getElementById('drHeader').textContent = drs.length + '名';
 
     if (!drs.length) {
-      document.getElementById('drBody').innerHTML = `<div class="empty"><div class="empty-icon">👨‍⚕️</div><div class="empty-text">記録がありません</div></div>`;
+      document.getElementById('drBody').innerHTML = `<div class="empty"><div class="empty-text">記録がありません</div></div>`;
       return;
     }
 
