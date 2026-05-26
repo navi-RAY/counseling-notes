@@ -455,6 +455,41 @@
   </div>
 </div>
 
+<!-- ===== DEVICE SETTINGS PANEL ===== -->
+<div class="detail-panel" id="devicePanel">
+  <div class="detail-header">
+    <button class="back-btn" onclick="closeDevicePanel()"><span class="back-icon">‹</span> 戻る</button>
+    <span class="detail-panel-title">デバイス・Dr設定</span>
+    <button class="header-icon-btn right" onclick="openDeviceEdit(-1)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+  <div style="padding:14px 16px 12px;font-size:13px;color:var(--text-sub);line-height:1.7;border-bottom:1px solid var(--border);">
+    PlaudデバイスごとにキーワードとDr名を登録します。メール受信時にキーワードが一致すると自動でDrが設定されます。<br>
+    <span style="font-weight:600;color:var(--text);">ヒント:</span> Plaudアプリでデバイス名を「山田-Pin」のように設定すると識別しやすくなります。
+  </div>
+  <div id="deviceList" style="flex:1;overflow-y:auto;"></div>
+</div>
+
+<!-- ===== DEVICE EDIT SHEET ===== -->
+<div class="sheet-bg" id="deviceEditSheet">
+  <div class="sheet" style="height:auto;gap:12px;">
+    <div class="sheet-top">
+      <button class="sheet-cancel" onclick="closeDeviceEdit()">キャンセル</button>
+      <span class="sheet-title">デバイス登録</span>
+      <button class="sheet-save" onclick="saveDeviceEntry()">保存</button>
+    </div>
+    <div class="field">
+      <label class="field-label">キーワード（メール内の識別文字列）</label>
+      <input class="field-input" id="deviceKeyword" type="text" placeholder="例: 山田-Pin" autocomplete="off">
+    </div>
+    <div class="field" style="padding-bottom:calc(16px + env(safe-area-inset-bottom));">
+      <label class="field-label">Dr名</label>
+      <input class="field-input" id="deviceDrName" type="text" placeholder="例: 山田" autocomplete="off">
+    </div>
+  </div>
+</div>
+
 <!-- ===== SCREEN: Dr別 ===== -->
 <main class="screen" id="screenDr">
   <div class="list-header" id="drHeader"></div>
@@ -759,7 +794,7 @@
   // ===== SETTINGS =====
   function openSettings() {
     const hasPin = !!getPin();
-    document.getElementById('settingsList').innerHTML = !hasPin
+    const pinItems = !hasPin
       ? `<div class="settings-item" onclick="closeSettings();showLock('setup1')">
            <span class="settings-label">PINを設定する</span><span class="settings-arrow">›</span>
          </div>`
@@ -769,9 +804,106 @@
          <div class="settings-item" onclick="confirmRemovePin()">
            <span class="settings-label danger">PINを削除する</span><span class="settings-arrow">›</span>
          </div>`;
+    document.getElementById('settingsList').innerHTML =
+      `<div class="settings-item" onclick="closeSettings();openDevicePanel()">
+         <span class="settings-label">デバイス・Dr設定</span><span class="settings-arrow">›</span>
+       </div>` + pinItems;
     document.getElementById('settingsSheet').classList.add('open');
   }
   function closeSettings() { document.getElementById('settingsSheet').classList.remove('open'); }
+
+  // ===== DEVICE MAP =====
+  let deviceEntries  = [];
+  let editingDevIdx  = -1;
+  const DEVICE_DOC   = db.collection('settings').doc('device_map');
+
+  async function loadDeviceMapFromDB() {
+    try {
+      const snap = await DEVICE_DOC.get();
+      deviceEntries = snap.exists ? JSON.parse(snap.data().json || '[]') : [];
+    } catch { deviceEntries = []; }
+  }
+
+  async function saveDeviceMapToDB() {
+    await DEVICE_DOC.set({ json: JSON.stringify(deviceEntries) });
+  }
+
+  async function openDevicePanel() {
+    await loadDeviceMapFromDB();
+    renderDeviceList();
+    document.getElementById('devicePanel').classList.add('open');
+  }
+
+  function closeDevicePanel() {
+    document.getElementById('devicePanel').classList.remove('open');
+  }
+
+  function renderDeviceList() {
+    const el = document.getElementById('deviceList');
+    if (!deviceEntries.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-text">デバイスが登録されていません</div></div>`;
+      return;
+    }
+    el.innerHTML = deviceEntries.map((e, i) => `
+      <div class="settings-item">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;color:var(--text);font-weight:500;">${esc(e.dr)}</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">キーワード: ${esc(e.keyword)}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button onclick="openDeviceEdit(${i})" style="background:none;border:none;color:var(--primary);font-size:13px;padding:8px 10px;cursor:pointer;font-family:inherit;">編集</button>
+          <button onclick="deleteDeviceEntry(${i})" style="background:none;border:none;color:var(--danger);font-size:13px;padding:8px 10px;cursor:pointer;font-family:inherit;">削除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openDeviceEdit(idx) {
+    editingDevIdx = idx;
+    if (idx >= 0 && deviceEntries[idx]) {
+      document.getElementById('deviceKeyword').value = deviceEntries[idx].keyword;
+      document.getElementById('deviceDrName').value  = deviceEntries[idx].dr;
+    } else {
+      document.getElementById('deviceKeyword').value = '';
+      document.getElementById('deviceDrName').value  = '';
+    }
+    document.getElementById('deviceEditSheet').classList.add('open');
+  }
+
+  function closeDeviceEdit() {
+    document.getElementById('deviceEditSheet').classList.remove('open');
+    editingDevIdx = -1;
+  }
+
+  async function saveDeviceEntry() {
+    const keyword = document.getElementById('deviceKeyword').value.trim();
+    const dr      = document.getElementById('deviceDrName').value.trim();
+    if (!keyword) { toast('キーワードを入力してください'); return; }
+    if (!dr)      { toast('Dr名を入力してください'); return; }
+    if (editingDevIdx >= 0) {
+      deviceEntries[editingDevIdx] = { keyword, dr };
+    } else {
+      deviceEntries.push({ keyword, dr });
+    }
+    try {
+      await saveDeviceMapToDB();
+      closeDeviceEdit();
+      renderDeviceList();
+      toast('保存しました ✓');
+    } catch { toast('保存に失敗しました'); }
+  }
+
+  async function deleteDeviceEntry(idx) {
+    const e = deviceEntries[idx];
+    if (!e || !confirm(`「${e.dr}」を削除しますか？`)) return;
+    deviceEntries.splice(idx, 1);
+    try {
+      await saveDeviceMapToDB();
+      renderDeviceList();
+      toast('削除しました');
+    } catch { toast('保存に失敗しました'); }
+  }
+
   function confirmRemovePin() {
     if (!confirm('PINを削除しますか？')) return;
     removePin();
