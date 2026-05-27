@@ -1,0 +1,70 @@
+name: assign-dr
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign Dr to unassigned records
+        run: |
+          node << 'EOF'
+          const PROJECT = 'p-file-19631';
+          const API_KEY = 'AIzaSyBAzYz_XSMGqAQcXMJuwYF9bclcyDj2tNY';
+
+          async function main() {
+            const authRes = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + API_KEY, {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({returnSecureToken: true})
+            });
+            const { idToken: token } = await authRes.json();
+
+            const base = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+            const headers = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+            // device-map取得
+            const dmRes = await fetch(`${base}/records/device-map`, { headers });
+            const dmDoc = await dmRes.json();
+            const deviceMap = JSON.parse(dmDoc.fields?.json?.stringValue || '[]');
+
+            // 全レコード取得
+            const recsRes = await fetch(`${base}/records?pageSize=100`, { headers });
+            const recsData = await recsRes.json();
+            const docs = recsData.documents || [];
+
+            let fixed = 0;
+            for (const doc of docs) {
+              const f = doc.fields || {};
+              const source = f.source?.stringValue || '';
+              const dr = f.dr?.stringValue || '';
+              if (source !== 'plaud_auto' || dr) continue;
+
+              // toフィールドで照合
+              const toAddr = f.to?.stringValue || '';
+              let assignedDr = '';
+              for (const entry of deviceMap) {
+                if (toAddr.toLowerCase().includes(entry.keyword.toLowerCase())) {
+                  assignedDr = entry.dr;
+                  break;
+                }
+              }
+              // toがなければdevice-mapにDrが1件だけならそれを使う
+              if (!assignedDr && deviceMap.length === 1) assignedDr = deviceMap[0].dr;
+              if (!assignedDr) continue;
+
+              const docId = doc.name.split('/').pop();
+              await fetch(`${base}/records/${docId}?updateMask.fieldPaths=dr`, {
+                method: 'PATCH', headers,
+                body: JSON.stringify({ fields: { dr: { stringValue: assignedDr } } })
+              });
+              console.log(`assigned ${assignedDr} to ${docId}`);
+              fixed++;
+            }
+            console.log(`done: ${fixed} records updated`);
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          EOF
