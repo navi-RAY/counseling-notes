@@ -1081,7 +1081,7 @@
   // ===== DEVICE MAP =====
   let deviceEntries  = [];
   let editingDevIdx  = -1;
-  const DEVICE_DOC   = db.collection('settings').doc('device_map');
+  const DEVICE_DOC   = db.collection('records').doc('__device_map__');
 
   async function loadDeviceMapFromDB() {
     try {
@@ -1091,7 +1091,7 @@
   }
 
   async function saveDeviceMapToDB() {
-    await DEVICE_DOC.set({ json: JSON.stringify(deviceEntries) });
+    await DEVICE_DOC.set({ json: JSON.stringify(deviceEntries), _type: 'device_map' });
   }
 
   async function openDevicePanel() {
