@@ -1081,7 +1081,7 @@
   // ===== DEVICE MAP =====
   let deviceEntries  = [];
   let editingDevIdx  = -1;
-  const DEVICE_DOC   = db.collection('records').doc('__device_map__');
+  const DEVICE_DOC   = db.collection('records').doc('device-map');
 
   async function loadDeviceMapFromDB() {
     try {
