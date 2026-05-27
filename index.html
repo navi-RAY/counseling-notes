@@ -14,8 +14,8 @@
 
     :root {
       --text:    #37352F;
-      --text-sub:#9B9A97;
-      --text-hint:#C4C4C1;
+      --text-sub:#5B5A57;
+      --text-hint:#8B8A87;
       --bg:      #FFFFFF;
       --bg-page: #FBFBFA;
       --border:  #E9E9E7;
@@ -837,6 +837,7 @@
     document.getElementById('screen' + name).classList.add('active');
     document.getElementById('nav' + name).classList.add('active');
     curScreen = name;
+    localStorage.setItem('cn_last_screen', name);
     if (name === 'List') renderList();
     if (name === 'New')  initNew();
     if (name === 'Dr')   { document.getElementById('drSubHeader').style.display='none'; renderDr(); }
@@ -1246,11 +1247,14 @@
   function doReload(btn) {
     const icon = document.getElementById('reloadIcon');
     icon.classList.add('spinning');
+    localStorage.setItem('cn_last_screen', curScreen);
     setTimeout(() => window.location.reload(), 500);
   }
 
   // ===== INIT =====
   initNew();
+  const savedScreen = localStorage.getItem('cn_last_screen');
+  if (savedScreen && savedScreen !== 'Search') showScreen(savedScreen);
   if (getPin()) showLock('unlock');
 </script>
 </body>
