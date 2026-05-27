@@ -699,6 +699,11 @@
 
 <!-- ===== SCREEN: Dr別 ===== -->
 <main class="screen" id="screenDr">
+  <div id="drSubHeader" style="display:none;padding:10px 16px 6px;border-bottom:1px solid var(--border);display:none;align-items:center;gap:4px;">
+    <button onclick="backToDrList()" style="background:none;border:none;color:var(--primary);font-size:14px;display:flex;align-items:center;gap:2px;padding:6px 8px 6px 0;cursor:pointer;font-family:inherit;flex-shrink:0;"><span style="font-size:20px;line-height:1;">‹</span> Dr一覧</button>
+    <span id="drSubTitle" style="font-size:14px;font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <span id="drSubCount" style="font-size:13px;color:var(--text-sub);flex-shrink:0;"></span>
+  </div>
   <div class="list-header" id="drHeader"></div>
   <div class="list-body" id="drBody"></div>
 </main>
@@ -717,17 +722,17 @@
     </svg>
     <span>新規</span>
   </button>
-  <button class="nav-btn" id="navList" onclick="showScreen('List')">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-      <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>
-    </svg>
-    <span>一覧</span>
-  </button>
   <button class="nav-btn" id="navDr" onclick="showScreen('Dr')">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
     <span>Dr別</span>
+  </button>
+  <button class="nav-btn" id="navList" onclick="showScreen('List')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>
+    </svg>
+    <span>一覧</span>
   </button>
 </nav>
 
@@ -834,7 +839,7 @@
     curScreen = name;
     if (name === 'List') renderList();
     if (name === 'New')  initNew();
-    if (name === 'Dr')   renderDr();
+    if (name === 'Dr')   { document.getElementById('drSubHeader').style.display='none'; renderDr(); }
   }
 
   // ===== CARD HTML =====
@@ -962,6 +967,8 @@
 
   // ===== DR別 =====
   function renderDr() {
+    const subHeader = document.getElementById('drSubHeader');
+    subHeader.style.display = 'none';
     const recs = DB.all();
     const drMap = {};
     recs.forEach(r => {
@@ -970,8 +977,13 @@
       drMap[dr].push(r);
     });
 
-    const drs = Object.keys(drMap).sort();
+    const drs = Object.keys(drMap).sort((a,b) => {
+      if (a === '未設定') return 1;
+      if (b === '未設定') return -1;
+      return a.localeCompare(b, 'ja');
+    });
     document.getElementById('drHeader').textContent = drs.length + '名';
+    document.getElementById('drHeader').style.display = '';
 
     if (!drs.length) {
       document.getElementById('drBody').innerHTML = `<div class="empty"><div class="empty-text">記録がありません</div></div>`;
@@ -979,8 +991,9 @@
     }
 
     document.getElementById('drBody').innerHTML = drs.map(dr => {
-      const count = drMap[dr].length;
-      const latest = drMap[dr].sort((a,b) => b.d.localeCompare(a.d))[0];
+      const sorted = drMap[dr].slice().sort((a,b) => b.d.localeCompare(a.d));
+      const count  = sorted.length;
+      const latest = sorted[0];
       return `<div class="card" onclick="filterByDr('${esc(dr)}')">
         <div class="card-top">
           <span class="card-patient">${dr === '未設定' ? '— 未設定' : 'Dr. ' + esc(dr)}</span>
@@ -992,11 +1005,21 @@
   }
 
   function filterByDr(dr) {
-    showScreen('List');
-    document.getElementById('filterInput').value = '';
     const recs = DB.all().filter(r => (r.dr || '未設定') === dr).sort((a,b) => b.d.localeCompare(a.d));
-    document.getElementById('listHeader').textContent = `Dr. ${dr}　${recs.length}件`;
-    document.getElementById('listBody').innerHTML = recs.map(r => cardHTML(r)).join('');
+    const label = dr === '未設定' ? '未設定' : 'Dr. ' + dr;
+    document.getElementById('drSubHeader').style.display = 'flex';
+    document.getElementById('drSubTitle').textContent = label;
+    document.getElementById('drSubCount').textContent = recs.length + '件';
+    document.getElementById('drHeader').style.display = 'none';
+    document.getElementById('drBody').innerHTML = recs.length
+      ? recs.map(r => cardHTML(r)).join('')
+      : `<div class="empty"><div class="empty-text">記録がありません</div></div>`;
+  }
+
+  function backToDrList() {
+    document.getElementById('drSubHeader').style.display = 'none';
+    document.getElementById('drHeader').style.display = '';
+    renderDr();
   }
 
   // ===== SETTINGS =====
