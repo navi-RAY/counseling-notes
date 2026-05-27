@@ -789,7 +789,8 @@
     unsubscribe = COL.orderBy('at', 'desc').onSnapshot(snap => {
       allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setSyncDot('synced');
-      if (curScreen === 'List') renderList();
+      if (curScreen === 'List')   renderList();
+      if (curScreen === 'Dr')     renderDr();
       if (curScreen === 'Search') {
         const num = document.getElementById('searchInput').value.trim();
         if (num) doSearch();
