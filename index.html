@@ -942,7 +942,16 @@
         <div class="doc-section-label">要約</div>
         <div class="doc-summary">${esc(r.s)}</div>
       </div>` : '';
-    const contentBlock = r.c ? `
+    const contentBlock = r.docLink ? `
+      <div class="doc-section">
+        <div class="doc-section-label">文字起こし</div>
+        <div style="padding:0 14px 20px;">
+          <a href="${r.docLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-page);border:1px solid var(--border);border-radius:8px;color:var(--primary);font-size:14px;font-weight:500;text-decoration:none;">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            文字起こしを開く
+          </a>
+        </div>
+      </div>` : r.c ? `
       <div class="doc-section">
         <div class="doc-section-label">文字起こし</div>
         <div class="doc-content">${esc(r.c)}</div>
