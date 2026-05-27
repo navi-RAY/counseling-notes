@@ -394,6 +394,24 @@
     .act-btn.edit { background: var(--hover); color: var(--text); }
     .act-btn.del  { background: transparent; color: var(--danger); border: 1px solid #FECACA; }
 
+    /* DOCUMENT SECTIONS */
+    .doc-section { border-bottom: 1px solid var(--border); }
+    .doc-section-label {
+      padding: 16px 24px 8px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-hint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .doc-summary {
+      padding: 0 24px 20px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     /* SHEET */
     .sheet-bg {
       position: fixed; inset: 0;
@@ -845,14 +863,16 @@
 
   // ===== CARD HTML =====
   function cardHTML(r) {
-    const prev = esc(r.c.slice(0, 100).replace(/\n/g,' '));
-    const dr   = r.dr ? `<div class="card-dr">Dr. ${esc(r.dr)}</div>` : '';
+    const title = r.t ? esc(r.t) : `患者 ${esc(r.p)}`;
+    const prev  = esc((r.s || r.c || '').slice(0, 100).replace(/\n/g,' '));
+    const dr    = r.dr ? `<div class="card-dr">Dr. ${esc(r.dr)}</div>` : '';
+    const num   = r.t && r.p ? `<div style="font-size:11px;color:var(--text-hint);margin-bottom:2px;">患者 No.${esc(r.p)}</div>` : '';
     return `<div class="card" onclick="openDetail('${r.id}')">
       <div class="card-top">
-        <span class="card-patient">患者 ${esc(r.p)}</span>
+        <span class="card-patient">${title}</span>
         <span class="card-date">${fmtDate(r.d)}</span>
       </div>
-      ${dr}
+      ${num}${dr}
       <div class="card-preview">${prev}</div>
     </div>`;
   }
@@ -915,14 +935,27 @@
     if (!r) return;
     curDetailId = id;
     document.getElementById('detailPanelTitle').textContent = `No.${r.p}`;
+    const docTitle = r.t || `患者 No.${esc(r.p)}`;
+    const summaryBlock = r.s ? `
+      <div class="doc-section">
+        <div class="doc-section-label">要約</div>
+        <div class="doc-summary">${esc(r.s)}</div>
+      </div>` : '';
+    const contentBlock = r.c ? `
+      <div class="doc-section">
+        <div class="doc-section-label">文字起こし</div>
+        <div class="doc-content">${esc(r.c)}</div>
+      </div>` : '';
     document.getElementById('detailBody').innerHTML = `
-      <div class="doc-title">患者 No.${esc(r.p)}</div>
+      <div class="doc-title">${esc(docTitle)}</div>
       <div class="doc-meta">
+        ${r.p ? `<div class="doc-meta-row"><span class="doc-meta-key">患者番号</span><span class="doc-meta-val">No.${esc(r.p)}</span></div>` : ''}
         <div class="doc-meta-row"><span class="doc-meta-key">日付</span><span class="doc-meta-val">${fmtDate(r.d)}</span></div>
         <div class="doc-meta-row"><span class="doc-meta-key">担当Dr</span><span class="doc-meta-val">${r.dr ? 'Dr. '+esc(r.dr) : '—'}</span></div>
         <div class="doc-meta-row"><span class="doc-meta-key">ソース</span><span class="doc-meta-val" style="color:var(--text-sub);font-weight:400;">${r.source === 'plaud_auto' ? 'Plaud AutoFlow' : '手動入力'}</span></div>
       </div>
-      <div class="doc-content">${esc(r.c)}</div>
+      ${summaryBlock}
+      ${contentBlock}
       <div class="doc-actions">
         <button class="act-btn edit" onclick="openEdit('${id}')">編集</button>
         <button class="act-btn del"  onclick="delRecord('${id}')">削除</button>
