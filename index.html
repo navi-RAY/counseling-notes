@@ -856,7 +856,7 @@
     document.getElementById('screen' + name).classList.add('active');
     document.getElementById('nav' + name).classList.add('active');
     curScreen = name;
-    localStorage.setItem('cn_last_screen', name);
+    location.hash = name;
     if (name === 'List') renderList();
     if (name === 'New')  initNew();
     if (name === 'Dr')   { document.getElementById('drSubHeader').style.display='none'; renderDr(); }
@@ -1281,14 +1281,14 @@
   function doReload(btn) {
     const icon = document.getElementById('reloadIcon');
     icon.classList.add('spinning');
-    localStorage.setItem('cn_last_screen', curScreen);
     setTimeout(() => window.location.reload(), 500);
   }
 
   // ===== INIT =====
   initNew();
-  const savedScreen = localStorage.getItem('cn_last_screen');
-  if (savedScreen && savedScreen !== 'Search') showScreen(savedScreen);
+  const SCREENS = ['Search','New','List','Dr'];
+  const hashScreen = location.hash.slice(1);
+  if (SCREENS.includes(hashScreen) && hashScreen !== 'Search') showScreen(hashScreen);
   if (getPin()) showLock('unlock');
 </script>
 </body>
