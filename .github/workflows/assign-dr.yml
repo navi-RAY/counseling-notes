@@ -25,24 +25,29 @@ jobs:
             const base = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
             const headers = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
 
-            // device-map取得
-            const dmRes = await fetch(`${base}/records/device-map`, { headers });
-            const dmDoc = await dmRes.json();
+            const dmDoc = await (await fetch(`${base}/records/device-map`, { headers })).json();
             const deviceMap = JSON.parse(dmDoc.fields?.json?.stringValue || '[]');
 
-            // 全レコード取得
-            const recsRes = await fetch(`${base}/records?pageSize=100`, { headers });
-            const recsData = await recsRes.json();
+            const recsData = await (await fetch(`${base}/records?pageSize=100`, { headers })).json();
             const docs = recsData.documents || [];
 
             let fixed = 0;
             for (const doc of docs) {
               const f = doc.fields || {};
+              const dr     = f.dr?.stringValue || '';
+              const t      = f.t?.stringValue  || '';
+              const p      = f.p?.stringValue  || '';
               const source = f.source?.stringValue || '';
-              const dr = f.dr?.stringValue || '';
-              if (source !== 'plaud_auto' || dr) continue;
+              const docId  = doc.name.split('/').pop();
 
-              // toフィールドで照合
+              if (docId === 'device-map') continue;
+              if (dr) continue;
+
+              const isPlaud = source === 'plaud_auto'
+                || t.includes('[Plaud-AutoFlow]')
+                || p.includes('[Plaud-AutoFlow]');
+              if (!isPlaud) continue;
+
               const toAddr = f.to?.stringValue || '';
               let assignedDr = '';
               for (const entry of deviceMap) {
@@ -51,11 +56,9 @@ jobs:
                   break;
                 }
               }
-              // toがなければdevice-mapにDrが1件だけならそれを使う
               if (!assignedDr && deviceMap.length === 1) assignedDr = deviceMap[0].dr;
               if (!assignedDr) continue;
 
-              const docId = doc.name.split('/').pop();
               await fetch(`${base}/records/${docId}?updateMask.fieldPaths=dr`, {
                 method: 'PATCH', headers,
                 body: JSON.stringify({ fields: { dr: { stringValue: assignedDr } } })
