@@ -606,7 +606,7 @@
 <!-- ===== SCREEN: Search ===== -->
 <main class="screen active" id="screenSearch">
   <div class="search-bar">
-    <input class="num-input" id="searchInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="患者番号" autocomplete="off">
+    <input class="num-input" id="searchInput" type="text" placeholder="患者番号・タイトル・日付" autocomplete="off">
     <button class="search-go" onclick="doSearch()">検索</button>
   </div>
   <div class="result-area" id="searchResults">
@@ -663,6 +663,7 @@
       <span class="sheet-title">内容を編集</span>
       <button class="sheet-save" onclick="saveEdit()">保存</button>
     </div>
+    <input class="field-input" id="editNum" type="text" inputmode="numeric" placeholder="患者番号" autocomplete="off" style="flex-shrink:0;">
     <input class="field-input" id="editDr" type="text" placeholder="担当Dr" autocomplete="off" style="flex-shrink:0;">
     <textarea class="sheet-textarea" id="editTextarea"></textarea>
   </div>
@@ -717,7 +718,7 @@
 
 <!-- ===== SCREEN: Dr別 ===== -->
 <main class="screen" id="screenDr">
-  <div id="drSubHeader" style="display:none;padding:10px 16px 6px;border-bottom:1px solid var(--border);display:none;align-items:center;gap:4px;">
+  <div id="drSubHeader" style="display:none;padding:10px 16px 6px;border-bottom:1px solid var(--border);align-items:center;gap:4px;">
     <button onclick="backToDrList()" style="background:none;border:none;color:var(--primary);font-size:14px;display:flex;align-items:center;gap:2px;padding:6px 8px 6px 0;cursor:pointer;font-family:inherit;flex-shrink:0;"><span style="font-size:20px;line-height:1;">‹</span> Dr一覧</button>
     <span id="drSubTitle" style="font-size:14px;font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <span id="drSubCount" style="font-size:13px;color:var(--text-sub);flex-shrink:0;"></span>
@@ -754,6 +755,7 @@
   </button>
 </nav>
 
+<div class="update-banner" id="updateBanner" onclick="applyUpdate()">新しいバージョンがあります — タップして更新</div>
 <div class="toast" id="toast"></div>
 
 <!-- Firebase -->
@@ -837,6 +839,9 @@
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+  function cleanTitle(t) {
+    return (t || '').replace(/^\[Plaud-AutoFlow\]\s*/i, '').trim();
+  }
   function fmtDate(d) {
     const dt = new Date(d + 'T00:00:00');
     return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
@@ -864,10 +869,10 @@
 
   // ===== CARD HTML =====
   function cardHTML(r) {
-    const title = r.t ? esc(r.t) : `患者 ${esc(r.p)}`;
+    const title = r.t ? esc(cleanTitle(r.t)) : (r.p ? `患者 No.${esc(r.p)}` : fmtDate(r.d));
     const prev  = esc((r.s || r.c || '').slice(0, 100).replace(/\n/g,' '));
     const dr    = r.dr ? `<div class="card-dr">Dr. ${esc(r.dr)}</div>` : '';
-    const num   = r.t && r.p ? `<div style="font-size:11px;color:var(--text-hint);margin-bottom:2px;">患者 No.${esc(r.p)}</div>` : '';
+    const num   = r.p ? `<div style="font-size:11px;color:var(--text-hint);margin-bottom:2px;">患者 No.${esc(r.p)}</div>` : '';
     return `<div class="card" onclick="openDetail('${r.id}')">
       <div class="card-top">
         <span class="card-patient">${title}</span>
@@ -880,19 +885,23 @@
 
   // ===== SEARCH =====
   function doSearch() {
-    const num = document.getElementById('searchInput').value.trim();
-    if (!num) { toast('患者番号を入力してください'); return; }
-    const recs = DB.byPatient(num);
-    const el   = document.getElementById('searchResults');
+    const q   = document.getElementById('searchInput').value.trim();
+    if (!q) { toast('キーワードを入力してください'); return; }
+    const el  = document.getElementById('searchResults');
+    const ql  = q.toLowerCase();
+    const recs = DB.all().filter(r =>
+      r.p?.includes(q) ||
+      cleanTitle(r.t || '').toLowerCase().includes(ql) ||
+      (r.d || '').includes(q)
+    ).sort((a,b) => b.d.localeCompare(a.d));
     if (!recs.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-text">「${esc(num)}」の記録はありません</div></div>`;
+      el.innerHTML = `<div class="empty"><div class="empty-text">「${esc(q)}」の記録はありません</div></div>`;
       return;
     }
-    const sorted = recs.slice().sort((a,b) => a.d.localeCompare(b.d));
     el.innerHTML = `<div class="result-meta">
-      <span class="result-label">患者番号 ${esc(num)}</span>
-      <span class="result-count">${sorted.length}件</span>
-    </div>${sorted.map(r => cardHTML(r)).join('')}`;
+      <span class="result-label">${esc(q)}</span>
+      <span class="result-count">${recs.length}件</span>
+    </div>${recs.map(r => cardHTML(r)).join('')}`;
   }
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
 
@@ -935,8 +944,8 @@
     const r = DB.byId(id);
     if (!r) return;
     curDetailId = id;
-    document.getElementById('detailPanelTitle').textContent = `No.${r.p}`;
-    const docTitle = r.t || `患者 No.${esc(r.p)}`;
+    const docTitle = r.t ? cleanTitle(r.t) : (r.p ? `患者 No.${r.p}` : fmtDate(r.d));
+    document.getElementById('detailPanelTitle').textContent = r.p ? `No.${r.p}` : docTitle.slice(0,20);
     const summaryBlock = r.s ? `
       <div class="doc-section">
         <div class="doc-section-label">要約</div>
@@ -991,8 +1000,9 @@
     const r = DB.byId(id);
     if (!r) return;
     editId = id;
+    document.getElementById('editNum').value      = r.p || '';
     document.getElementById('editDr').value       = r.dr || '';
-    document.getElementById('editTextarea').value = r.c;
+    document.getElementById('editTextarea').value = r.c || r.s || '';
     document.getElementById('editSheet').classList.add('open');
     setTimeout(() => document.getElementById('editTextarea').focus(), 300);
   }
@@ -1000,9 +1010,10 @@
   async function saveEdit() {
     const c  = document.getElementById('editTextarea').value.trim();
     const dr = document.getElementById('editDr').value.trim();
+    const p  = document.getElementById('editNum').value.trim();
     if (!c) { toast('内容を入力してください'); return; }
     try {
-      await DB.update(editId, { c, dr });
+      await DB.update(editId, { c, dr, p });
       closeEdit();
       openDetail(editId);
       toast('更新しました ✓');
