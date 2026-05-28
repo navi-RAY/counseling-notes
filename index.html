@@ -663,6 +663,7 @@
       <span class="sheet-title">内容を編集</span>
       <button class="sheet-save" onclick="saveEdit()">保存</button>
     </div>
+    <input class="field-input" id="editTitle" type="text" placeholder="タイトル" autocomplete="off" style="flex-shrink:0;">
     <input class="field-input" id="editNum" type="text" inputmode="numeric" placeholder="患者番号" autocomplete="off" style="flex-shrink:0;">
     <input class="field-input" id="editDr" type="text" placeholder="担当Dr" autocomplete="off" style="flex-shrink:0;">
     <textarea class="sheet-textarea" id="editTextarea"></textarea>
@@ -1000,6 +1001,7 @@
     const r = DB.byId(id);
     if (!r) return;
     editId = id;
+    document.getElementById('editTitle').value    = cleanTitle(r.t || '');
     document.getElementById('editNum').value      = r.p || '';
     document.getElementById('editDr').value       = r.dr || '';
     document.getElementById('editTextarea').value = r.c || r.s || '';
@@ -1008,12 +1010,13 @@
   }
   function closeEdit() { document.getElementById('editSheet').classList.remove('open'); editId = null; }
   async function saveEdit() {
+    const t  = document.getElementById('editTitle').value.trim();
     const c  = document.getElementById('editTextarea').value.trim();
     const dr = document.getElementById('editDr').value.trim();
     const p  = document.getElementById('editNum').value.trim();
     if (!c) { toast('内容を入力してください'); return; }
     try {
-      await DB.update(editId, { c, dr, p });
+      await DB.update(editId, { t, c, dr, p });
       closeEdit();
       openDetail(editId);
       toast('更新しました ✓');
