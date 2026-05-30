@@ -1014,7 +1014,6 @@
     const c  = document.getElementById('editTextarea').value.trim();
     const dr = document.getElementById('editDr').value.trim();
     const p  = document.getElementById('editNum').value.trim();
-    if (!c) { toast('内容を入力してください'); return; }
     try {
       await DB.update(editId, { t, c, dr, p });
       closeEdit();
