@@ -790,17 +790,7 @@
     migrateLocalStorage();
     setSyncDot('syncing');
     unsubscribe = COL.orderBy('at', 'desc').onSnapshot(snap => {
-      const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // タイトル重複を除去（内容が多い方を残す）
-      const seen = {};
-      raw.forEach(r => {
-        const key = r.t;
-        if (!key) { seen[r.id] = r; return; }
-        const prevLen = (seen[key]?.c?.length||0) + (seen[key]?.s?.length||0);
-        const curLen = (r.c?.length||0) + (r.s?.length||0);
-        if (!seen[key] || curLen > prevLen) seen[key] = r;
-      });
-      allRecords = Object.values(seen).sort((a,b) => (b.at||0) - (a.at||0));
+      allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setSyncDot('synced');
       if (curScreen === 'List')   renderList();
       if (curScreen === 'Dr')     renderDr();
