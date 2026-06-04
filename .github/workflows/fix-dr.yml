@@ -1,0 +1,82 @@
+name: fix-dr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix Dr assignment and remove duplicates
+        run: |
+          node << 'EOF'
+          const PROJECT = 'p-file-19631';
+          const API_KEY = 'AIzaSyBAzYz_XSMGqAQcXMJuwYF9bclcyDj2tNY';
+
+          async function main() {
+            const auth = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + API_KEY, {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({returnSecureToken: true})
+            }).then(r=>r.json());
+            const token = auth.idToken;
+            const base = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+            const headers = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+            const dmDoc = await fetch(`${base}/records/device-map`, { headers }).then(r=>r.json());
+            if (dmDoc.error) { console.log('ERROR:', dmDoc.error.message); return; }
+            const deviceMap = JSON.parse(dmDoc.fields?.json?.stringValue || '[]');
+            console.log('device-map:', JSON.stringify(deviceMap));
+
+            const recsData = await fetch(`${base}/records?pageSize=300`, { headers }).then(r=>r.json());
+            const docs = recsData.documents || [];
+            console.log('total docs:', docs.length);
+
+            // 重複削除（同じタイトルで内容が少ない方を削除）
+            const seen = {};
+            const toDelete = [];
+            docs.sort((a,b) => {
+              const ca = (a.fields?.c?.stringValue||'').length + (a.fields?.s?.stringValue||'').length;
+              const cb = (b.fields?.c?.stringValue||'').length + (b.fields?.s?.stringValue||'').length;
+              return cb - ca; // 内容が多い順
+            });
+            for (const doc of docs) {
+              const t = doc.fields?.t?.stringValue || '';
+              const id = doc.name.split('/').pop();
+              if (id === 'device-map') continue;
+              if (!t) continue;
+              if (seen[t]) { toDelete.push(id); } else { seen[t] = id; }
+            }
+            console.log('duplicates to delete:', toDelete.length);
+            for (const id of toDelete) {
+              await fetch(`${base}/records/${id}`, { method: 'DELETE', headers });
+            }
+
+            // Dr割り振り
+            const recsData2 = await fetch(`${base}/records?pageSize=300`, { headers }).then(r=>r.json());
+            let fixed = 0;
+            const toAddrs = new Set();
+            for (const doc of (recsData2.documents || [])) {
+              const f = doc.fields || {};
+              const dr = f.dr?.stringValue || '';
+              const id = doc.name.split('/').pop();
+              const to = f.to?.stringValue || '';
+              if (to) toAddrs.add(to);
+              if (id === 'device-map' || dr) continue;
+              let assignedDr = '';
+              for (const entry of deviceMap) {
+                if (to.toLowerCase().includes(entry.keyword.toLowerCase())) { assignedDr = entry.dr; break; }
+              }
+              if (!assignedDr && deviceMap.length === 1) assignedDr = deviceMap[0].dr;
+              if (!assignedDr) continue;
+              await fetch(`${base}/records/${id}?updateMask.fieldPaths=dr`, {
+                method: 'PATCH', headers,
+                body: JSON.stringify({ fields: { dr: { stringValue: assignedDr } } })
+              });
+              console.log('assigned', assignedDr, '->', id);
+              fixed++;
+            }
+            console.log('to addresses found:', [...toAddrs].join(', '));
+            console.log('Dr fixed:', fixed);
+          }
+          main().catch(e => { console.error(e); process.exit(1); });
+          EOF
