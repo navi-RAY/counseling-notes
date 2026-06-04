@@ -790,7 +790,21 @@
     migrateLocalStorage();
     setSyncDot('syncing');
     unsubscribe = COL.orderBy('at', 'desc').onSnapshot(snap => {
-      allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // 同じタイトル+日付の重複を除去（内容が多い方を優先）
+      const seen = {};
+      all.forEach(r => {
+        const key = (r.t || '') + '|' + (r.d || '');
+        if (!key || key === '|') { seen[r.id] = r; return; }
+        const prev = seen[key];
+        if (!prev) { seen[key] = r; return; }
+        const prevLen = (prev.c||'').length + (prev.s||'').length;
+        const curLen  = (r.c||'').length  + (r.s||'').length;
+        if (curLen > prevLen || (curLen === prevLen && (r.dr||'') && !(prev.dr||''))) {
+          seen[key] = r;
+        }
+      });
+      allRecords = Object.values(seen).sort((a,b)=>(b.at||0)-(a.at||0));
       setSyncDot('synced');
       if (curScreen === 'List')   renderList();
       if (curScreen === 'Dr')     renderDr();
